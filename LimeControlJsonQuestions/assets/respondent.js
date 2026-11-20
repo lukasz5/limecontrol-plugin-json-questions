@@ -8,9 +8,9 @@
     }
 
     const messages = {
-        pl: { empty: 'Brak pasujących pozycji z wcześniejszego pytania.', comment: 'Komentarz', required: 'Wymagane', invalid: 'Nie można odczytać zapisanej odpowiedzi. Skontaktuj się z autorem ankiety.', any: 'Uzupełnij co najmniej jedną odpowiedź.' },
-        en: { empty: 'No items match your earlier answers.', comment: 'Comment', required: 'Required', invalid: 'The saved answer could not be read. Please contact the survey author.', any: 'Enter at least one answer.' },
-        de: { empty: 'Keine passenden Einträge aus den vorherigen Antworten.', comment: 'Kommentar', required: 'Erforderlich', invalid: 'Die gespeicherte Antwort konnte nicht gelesen werden. Bitte kontaktieren Sie die Umfrageleitung.', any: 'Geben Sie mindestens eine Antwort an.' }
+        pl: { item: 'Pozycja', table: 'Tabela odpowiedzi', empty: 'Brak pasujących pozycji z wcześniejszego pytania.', comment: 'Komentarz', required: 'Wymagane', invalid: 'Nie można odczytać zapisanej odpowiedzi. Skontaktuj się z autorem ankiety.', any: 'Uzupełnij co najmniej jedną odpowiedź.' },
+        en: { item: 'Item', table: 'Response table', empty: 'No items match your earlier answers.', comment: 'Comment', required: 'Required', invalid: 'The saved answer could not be read. Please contact the survey author.', any: 'Enter at least one answer.' },
+        de: { item: 'Eintrag', table: 'Antworttabelle', empty: 'Keine passenden Einträge aus den vorherigen Antworten.', comment: 'Kommentar', required: 'Erforderlich', invalid: 'Die gespeicherte Antwort konnte nicht gelesen werden. Bitte kontaktieren Sie die Umfrageleitung.', any: 'Geben Sie mindestens eine Antwort an.' }
     };
     const byteMessages = {
         pl: (size, max) => `Odpowiedź zajmuje ${size} bajtów. Limit dla tego pytania wynosi ${max} bajtów. Skróć tekst lub komentarze, aby kontynuować.`,
@@ -136,13 +136,14 @@
     function analyze(def, sources, answer) {
         const prior = new Map(answer.rows.map(row => [keyOf(row.path), row.cells]));
         const rows = [];
+        const known = new Set(def.options.map(option => option.code));
         for (const source of sources) {
             const cells = Object.assign(Object.create(null), prior.get(keyOf(source.path)) || {});
             // Remove hidden answers before evaluating their downstream rules.
             for (let pass = 0; pass <= def.options.length; pass++) {
                 const policy = rowPolicy(def, source, cells, sources.length);
                 const hidden = Object.keys(cells).filter(code =>
-                    !def.options.some(option => option.code === code) || !policy.shown(code));
+                    !known.has(code) || !policy.shown(code));
                 if (!hidden.length) break;
                 for (const code of hidden) delete cells[code];
             }
@@ -198,16 +199,50 @@
         const key = keyOf(row.source.path);
         model.answer.rows = model.answer.rows.filter(other => keyOf(other.path) !== key);
         model.answer.rows.push({ path: row.source.path, cells });
-        refresh();
+        refresh(model, key);
     }
 
-    function createRow(model, source) {
+    function createMatrix(model) {
         const doc = model.block.ownerDocument;
-        const group = element(doc, 'fieldset', 'fieldset lcjq-row');
-        const legend = element(doc, 'legend', 'fieldset-legend');
+        const table = element(doc, 'table', 'table lcjq-matrix');
+        const caption = element(doc, 'caption', 'lcjq-sr-only', model.msg.table);
+        const head = table.createTHead().insertRow();
+        const heading = element(doc, 'th', '', model.msg.item);
+        heading.scope = 'col';
+        head.append(heading);
+        model.columnIds = new Map();
+        for (const option of model.ctx.definition.options) {
+            const col = element(doc, 'th', '', localLabel(option.label, model.ctx.language) || option.code);
+            col.scope = 'col';
+            col.id = 'lcjq-col-' + (++counter);
+            model.columnIds.set(option.code, col.id);
+            head.append(col);
+        }
+        table.prepend(caption);
+        model.rowParent = table.createTBody();
+        model.panel.classList.add('lcjq-scroll');
+        model.panel.tabIndex = 0;
+        model.panel.setAttribute('role', 'region');
+        const label = model.storage.getAttribute('aria-labelledby');
+        if (label && doc.getElementById(label)) model.panel.setAttribute('aria-labelledby', label);
+        else model.panel.setAttribute('aria-label', model.msg.table);
+        model.panel.append(table);
+    }
+
+    function createRow(model) {
+        const doc = model.block.ownerDocument;
+        const matrix = !!model.columnIds;
+        const group = element(doc, matrix ? 'tr' : 'fieldset', matrix ? 'lcjq-row' : 'fieldset lcjq-row');
+        const legend = element(doc, matrix ? 'span' : 'legend', matrix ? '' : 'fieldset-legend');
         const error = element(doc, 'p', 'lcjq-error', model.msg.any);
         error.hidden = true;
-        group.append(legend, error);
+        if (matrix) {
+            const header = element(doc, 'th');
+            header.scope = 'row';
+            legend.id = 'lcjq-row-' + (++counter);
+            header.append(legend, error);
+            group.append(header);
+        } else group.append(legend, error);
         const record = { group, legend, error, options: new Map(), row: null };
         const name = 'lcjq-radio-' + (++counter);
         for (const option of model.ctx.definition.options) {
@@ -232,24 +267,37 @@
             comment.type = 'text';
             commentLabel.append(element(doc, 'span', '', model.msg.comment + ' — ' + caption.textContent), comment);
             unit.append(label, commentLabel);
-            group.insertBefore(unit, error);
+            if (matrix) {
+                const colId = model.columnIds.get(option.code);
+                input.setAttribute('aria-labelledby', legend.id + ' ' + colId);
+                const commentTitle = commentLabel.firstElementChild;
+                commentTitle.textContent = model.msg.comment;
+                commentTitle.id = 'lcjq-note-' + (++counter);
+                comment.setAttribute('aria-labelledby', legend.id + ' ' + colId + ' ' + commentTitle.id);
+                caption.className = 'lcjq-sr-only';
+                group.insertCell().append(unit);
+            } else group.insertBefore(unit, error);
             input.addEventListener(selectable ? 'change' : 'input', () => writeValue(model, record.row, option, input, false));
             comment.addEventListener('input', () => writeValue(model, record.row, option, comment, true));
             record.options.set(option.code, { unit, input, comment, commentLabel, needed });
         }
-        model.panel.append(group);
+        model.rowParent.append(group);
         return record;
     }
 
-    function updateDom(model, result) {
+    function updateDom(model, result, editedPath) {
         const retained = new Set();
         let slot = 0;
         for (const row of result.rows) {
             const key = keyOf(row.source.path);
             retained.add(key);
-            const record = model.views.get(key) || createRow(model, row.source);
+            if (editedPath !== undefined && key !== editedPath && model.views.has(key)) {
+                slot++;
+                continue;
+            }
+            const record = model.views.get(key) || createRow(model);
             model.views.set(key, record);
-            if (model.panel.children[slot] !== record.group) model.panel.insertBefore(record.group, model.panel.children[slot] || null);
+            if (model.rowParent.children[slot] !== record.group) model.rowParent.insertBefore(record.group, model.rowParent.children[slot] || null);
             slot++;
             record.row = row;
             const title = localLabel(row.source.label, model.ctx.language) || row.source.path.join(' / ');
@@ -275,25 +323,45 @@
             if (!retained.has(key)) { record.group.remove(); model.views.delete(key); }
         }
         model.empty.hidden = !!result.rows.length;
+        model.panel.hidden = !result.rows.length;
     }
 
-    function refresh() {
+    const notifications = new Set();
+    function notifyLimeSurvey() {
+        for (const storage of Array.from(notifications)) {
+            notifications.delete(storage);
+            if (!storage.isConnected) continue;
+            for (const type of ['input', 'change', 'keyup']) storage.dispatchEvent(new Event(type, { bubbles: true }));
+        }
+    }
+
+    function refresh(edited, editedPath) {
         if (updating) return;
         updating = true;
         try {
             const visited = new Set();
-            const changed = [];
+            // A local edit affects this question and its same-page descendants only.
+            const affected = new Set();
+            if (edited) {
+                function mark(model) {
+                    if (affected.has(model)) return;
+                    affected.add(model);
+                    for (const child of active.values()) if (child.ctx.definition.source === model.ctx.questionCode) mark(child);
+                }
+                mark(edited);
+            }
             function update(model) {
-                if (visited.has(model) || model.error || !model.block.isConnected) return;
+                if (visited.has(model) || model.error || !model.block.isConnected || (edited && !affected.has(model))) return;
                 visited.add(model);
                 const def = model.ctx.definition;
                 const previous = active.get(def.source);
                 if (previous) update(previous);
-                const sources = sourceRows(model.ctx, def.source, model.block.ownerDocument);
+                const sources = model === edited && model.sources ? model.sources : sourceRows(model.ctx, def.source, model.block.ownerDocument);
+                model.sources = sources;
                 const result = analyze(def, sources, model.answer);
                 model.answer = result.clean;
                 model.valid = result.valid;
-                updateDom(model, result);
+                updateDom(model, result, model === edited ? editedPath : undefined);
                 // An unanswered optional block remains blank to native ExpressionScript.
                 const json = result.clean.rows.length ? JSON.stringify(result.clean) : '';
                 const bytes = encodedBytes(json);
@@ -306,13 +374,12 @@
                 }
                 if (model.storage.value !== json) {
                     model.storage.value = json;
-                    changed.push(model.storage);
+                    if (!notifications.size) queueMicrotask(notifyLimeSurvey);
+                    notifications.add(model.storage);
                 }
             }
             for (const model of active.values()) update(model);
-            for (const storage of changed) {
-                for (const type of ['input', 'change', 'keyup']) storage.dispatchEvent(new Event(type, { bubbles: true }));
-            }
+
         } finally { updating = false; }
     }
 
@@ -336,6 +403,8 @@
             sizeError.setAttribute('role', 'alert');
             const maxBytes = Number.isSafeInteger(ctx.maxBytes) && ctx.maxBytes > 0 ? ctx.maxBytes : DEFAULT_BYTES;
             const model = { block, ctx, msg, panel, empty, storage, sizeError, maxBytes, views: new Map(), valid: false };
+            model.rowParent = panel;
+            if (ctx.definition.kind === 'matrix') createMatrix(model);
             try { model.answer = readAnswer(storage.value); }
             catch (_) { model.error = true; empty.textContent = msg.invalid; empty.setAttribute('role', 'alert'); }
             block.dataset.lcjqMounted = 'true';
@@ -405,6 +474,7 @@
     });
     function guardSubmit(event, form) {
         if (!form) return;
+        notifyLimeSurvey();
         for (const model of active.values()) {
             if (!model.tooLarge || model.storage.form !== form || !model.block.isConnected) continue;
             event.preventDefault();

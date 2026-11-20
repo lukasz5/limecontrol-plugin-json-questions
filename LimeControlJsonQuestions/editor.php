@@ -37,5 +37,11 @@ $sid = (int)$ctx->survey->sid;
 <input type="hidden" name="<?= $h(App()->request->csrfTokenName) ?>" value="<?= $h(App()->request->csrfToken) ?>">
 <input type="hidden" name="code" value="<?= $h($code) ?>"><input type="hidden" name="expectedRevision" value="<?= $h($config['expectedRevision']) ?>">
 <button type="submit" class="btn" name="action" value="detach"><?= $m('detach') ?></button></form></details><?php endif;?>
+<?php if ($active || $display): ?><p><a href="<?= $h(self::url('backup',$sid,$code)) ?>"><?= $m('backup') ?></a></p><?php endif; ?>
+<?php if (!$active && $display): ?><details><summary><?= $m('purge') ?></summary><p><?= $m('purgeHelp') ?></p>
+<form method="post" action="<?= $h(self::url('editor',$sid,$code)) ?>"><input type="hidden" name="code" value="<?= $h($code) ?>">
+<input type="hidden" name="<?= $h(App()->request->csrfTokenName) ?>" value="<?= $h(App()->request->csrfToken) ?>">
+<input type="hidden" name="expectedRevision" value="<?= $h(hash('sha256', $ctx->attribute($questions[$code]['qid'],LimeControlJsonContext::DETACHED))) ?>">
+<button class="btn" type="submit" name="action" value="purge"><?= $m('purge') ?></button></form></details><?php endif; ?>
 <?php endif; ?>
 </main><script defer src="<?= $h($assetUrl) ?>/editor.js"></script></html>

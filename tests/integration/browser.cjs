@@ -31,6 +31,26 @@ async function login(browser) {
     await p.locator('#user').waitFor({state:'detached'});
     return p;
 }
+async function resumeFromFreshBrowser(browser, current, id, lang) {
+    const name='lcjq'+Date.now();
+    const pass='LCQ-test-reload';
+    // The visible toolbar submits the native hidden control on mobile and desktop.
+    await current.locator('[name=saveall]').first().evaluate(node=>node.click());
+    await current.locator('#savename').fill(name);
+    await current.locator('#savepass').fill(pass);
+    await current.locator('#savepass2').fill(pass);
+    await current.locator('button[type=submit]').filter({visible:true}).last().click();
+    await current.locator('#savename').waitFor({state:'detached'});
+    const fresh=await browser.newPage();
+    await fresh.goto(baseUrl(id,lang));
+    await fresh.locator('[name=loadall]').first().evaluate(node=>node.click());
+    await fresh.locator('#loadname').fill(name);
+    await fresh.locator('#loadpass').fill(pass);
+    await fresh.locator('#loadbutton').click();
+    await fresh.locator('#loadname').waitFor({state:'detached'});
+    await current.close();
+    return fresh;
+}
 async function getCsv(admin, survey, type) {
     const response = await admin.request.get(base + '/index.php/plugins/direct?plugin=LimeControlJsonQuestions&function='+type+'&sid='+survey);
     const text = await response.text();
@@ -49,28 +69,75 @@ async function getCsv(admin, survey, type) {
         await clickCheck(page.getByRole('checkbox',{name:'Łódź',exact:true}));
         await clickCheck(page.getByRole('checkbox',{name:'Gdynia',exact:true}));
         await move(page);
-        const rows = page.locator('.lcjq-row:visible');
-        await rows.first().waitFor();
-        assert.equal(await rows.count(),2);
-        const cityRow = name => rows.filter({has:page.locator('legend',{hasText:name})});
+        const visibleRows = () => page.locator('.lcjq-row:visible');
+        await visibleRows().first().waitFor();
+        assert.equal(await visibleRows().count(),2);
+        const cityRow = name => visibleRows().filter({has:page.locator('legend, th[scope=row]',{hasText:name})});
         await cityRow('Łódź').getByRole('checkbox',{name:/Pomiar/}).check();
         await cityRow('Gdynia').getByRole('checkbox',{name:/Serwis/}).check();
         checks.dependent_choices = true;
         await move(page);
         await cityRow('Łódź').getByRole('spinbutton').fill('9');
         await cityRow('Gdynia').getByRole('spinbutton').fill('0');
-        assert.equal(await rows.count(),2);
+        assert.equal(await visibleRows().count(),2);
         const screenshot = process.env.LCQ_SCREENSHOT;
         if (screenshot) await page.screenshot({path:screenshot});
         await move(page,'moveprev');
         assert.equal(await cityRow('Łódź').getByRole('checkbox',{name:/Pomiar/}).isChecked(),true);
         await move(page);
         assert.equal(await cityRow('Gdynia').getByRole('spinbutton').inputValue(),'0');
+        page = await resumeFromFreshBrowser(browser,page,sid,'pl');
+        await cityRow('Łódź').getByRole('spinbutton').waitFor();
+        assert.equal(await cityRow('Łódź').getByRole('spinbutton').inputValue(),'9');
+        assert.equal(await cityRow('Gdynia').getByRole('spinbutton').inputValue(),'0');
+        checks.sample_resumed_in_fresh_browser = true;
+        // The theme's language menu submits the current group to LimeSurvey.
+        await page.locator('[data-limesurvey-lang="en"]').first().evaluate(link=>link.click());
+        await page.getByRole('spinbutton',{name:/Hours/}).first().waitFor();
+        assert.equal(await cityRow('Gdynia').getByRole('spinbutton').inputValue(),'0');
+        await page.locator('[data-limesurvey-lang="pl"]').first().evaluate(link=>link.click());
+        await page.getByRole('spinbutton',{name:/Liczba godzin/}).first().waitFor();
+        checks.language_switch_retained_values = true;
+        await page.setViewportSize({width:390,height:844});
+        const firstNumber=cityRow('Łódź').getByRole('spinbutton');
+        await firstNumber.focus(); await page.keyboard.press('Tab');
+        assert.equal(await cityRow('Gdynia').getByRole('spinbutton').evaluate(input=>input===document.activeElement),true);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth+1),true);
+        await page.setViewportSize({width:1150,height:770});
+        checks.mobile_keyboard_navigation=true;
+        // Remove a parent choice after the dependent answers have already been saved.
+        await move(page,'moveprev');
+        await move(page,'moveprev');
+        const gdynia=page.getByRole('checkbox',{name:'Gdynia',exact:true});
+        await clickCheck(gdynia);
+        assert.equal(await gdynia.isChecked(),false);
+        await move(page);
+        assert.equal(await visibleRows().count(),1);
+        await move(page);
+        assert.equal(await visibleRows().count(),1);
+        assert.equal(await cityRow('Łódź').getByRole('spinbutton').inputValue(),'9');
+        await move(page);
+        assert.equal(await visibleRows().count(),1);
+        checks.removed_source_pruned=true;
+        // Restore the selected city and enter a new value for that branch.
+        await move(page,'moveprev'); await move(page,'moveprev'); await move(page,'moveprev');
+        await clickCheck(page.getByRole('checkbox',{name:'Gdynia',exact:true}));
+        await move(page);
+        await cityRow('Gdynia').getByRole('checkbox',{name:/Serwis/}).check();
+        await move(page);
+        await cityRow('Gdynia').getByRole('spinbutton').fill('0');
         await move(page);
         await cityRow('Łódź').waitFor();
-        assert.equal(await rows.count(),1);
+        assert.equal(await visibleRows().count(),1);
         await cityRow('Łódź').getByRole('checkbox',{name:/Inne/}).check();
-        await cityRow('Łódź').getByRole('textbox').fill('Powtórzenie pomiaru');
+        const comment=cityRow('Łódź').getByRole('textbox');
+        const maxBytes=await page.locator('.lcjq-block').evaluate(el=>JSON.parse(el.dataset.lcjq).maxBytes);
+        await comment.fill('X'.repeat(maxBytes+1));
+        await page.locator('.lcjq-error[tabindex]:visible').waitFor();
+        await move(page,'movesubmit');
+        await comment.waitFor();
+        checks.over_limit_blocked_at_bytes=maxBytes;
+        await comment.fill('Powtórzenie pomiaru');
         await move(page,'movesubmit');
         await page.getByText('Dziękujemy.',{exact:true}).first().waitFor();
         checks.followup_zero_and_back = true;
@@ -89,19 +156,34 @@ async function getCsv(admin, survey, type) {
         await page.locator('.lcjq-row input[type=number]').first().waitFor();
         const count=await page.locator('.lcjq-row input[type=number]').count();
         assert.equal(count,1600);
-        // Dispatch one input event per actual rendered control, including cell zero.
-        await page.evaluate(async()=>{
-            const rows=[...document.querySelectorAll('.lcjq-row')];
-            for(let r=0;r<rows.length;r++){
-                const inputs=rows[r].querySelectorAll('input[type=number]');
-                for(let c=0;c<inputs.length;c++){
-                    inputs[c].value=String(r*40+c);
-                    inputs[c].dispatchEvent(new Event('input',{bubbles:true}));
-                }
-                await new Promise(resolve=>setTimeout(resolve,0));
-            }
+        // Bulk-load synthetic fixture data into the native form field. LimeSurvey's own
+        // save action persists it; never write directly to the survey response table.
+        checks.grid_payload_bytes=await page.locator('.lcjq-block').evaluate(block=>{
+            const ctx=JSON.parse(block.dataset.lcjq);
+            const rows=Array.from({length:40},(_,r)=>({
+                path:['R'+String(r+1).padStart(2,'0')],
+                cells:Object.fromEntries(ctx.definition.options.map((opt,c)=>[opt.code,{value:r*40+c}]))
+            }));
+            const data=JSON.stringify({version:1,revision:ctx.definition.revision,rows});
+            block.querySelector('textarea').value=data;
+            return new TextEncoder().encode(data).length;
         });
-        checks.grid_payload_bytes=await page.locator('.lcjq-block textarea').evaluate(el=>new TextEncoder().encode(el.value).length);
+        checks.grid_input_strategy='Bulk synthetic answer supplied in the native form; fresh-session UI readback and edits at both ends';
+        page=await resumeFromFreshBrowser(browser,page,stress,'en');
+        await page.locator('.lcjq-row input[type=number]').first().waitFor();
+        const reloaded=await page.locator('.lcjq-row input[type=number]').evaluateAll(inputs=>inputs.map(input=>input.value));
+        assert.deepEqual(reloaded,Array.from({length:1600},(_,i)=>String(i)));
+        checks.grid_resume_values=reloaded.length;
+        const values=page.locator('.lcjq-row input[type=number]');
+        const started=Date.now();
+        await values.first().fill('17');
+        await values.first().fill('0');
+        await values.last().fill('1601');
+        await values.last().fill('1599');
+        checks.grid_ui_edit_average_ms=Math.round((Date.now()-started)/4);
+        const answerAfterEdits=await page.locator('.lcjq-block textarea').evaluate(el=>JSON.parse(el.value));
+        assert.equal(answerAfterEdits.rows[0].cells.C01.value,0);
+        assert.equal(answerAfterEdits.rows[39].cells.C40.value,1599);
         await move(page,'movesubmit');
         await page.getByText('Thank you.',{exact:true}).first().waitFor();
         await fs.writeFile(path.join(work,'stress-export.csv'),await getCsv(admin,stress,'export'));

@@ -110,11 +110,24 @@ final class LimeControlJsonContext
         return $out;
     }
 
-    public function definitionErrors($code, array $definition)
+    public function definitionErrors($code, array $definition, $checkSourceFields = true)
     {
         $errors = LimeControlJsonModel::validateDefinition($definition);
         if (!in_array($definition['source'] ?? null, $this->eligibleSources($code), true)) {
             $errors[] = 'definition.source';
+        } elseif (!$errors && $checkSourceFields) {
+            $upstream = $this->definition($definition['source']);
+            $allowed = ['source.count' => true];
+            foreach ($upstream['options'] ?? [] as $option) {
+                $allowed['source.' . $option['code']] = true;
+            }
+            foreach ($definition['rules'] ?? [] as $rule) {
+                array_walk_recursive($rule['when'], static function ($value, $key) use ($allowed, &$errors) {
+                    if ($key === 'field' && str_starts_with($value, 'source.') && !isset($allowed[$value])) {
+                        $errors[] = 'definition.sourceField';
+                    }
+                });
+            }
         }
         return array_values(array_unique($errors));
     }
@@ -182,7 +195,7 @@ final class LimeControlJsonContext
         $source = $definition['source'] ?? '';
         while ($source !== '' && isset($this->questions[$source]) && !isset($sources[$source])) {
             $question = $this->questions[$source];
-            if ($this->kind($source) === false) {
+            if ($this->kind($source) === false && !$this->attribute($question['qid'], self::DETACHED)) {
                 $sources[$source] = [];
                 $descriptors[$source] = $this->nativeChoices($question);
                 foreach ($descriptors[$source] as $item) {

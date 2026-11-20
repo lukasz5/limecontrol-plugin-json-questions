@@ -6,10 +6,20 @@ services:
       MYSQL_ROOT_PASSWORD: lcjq-synthetic-test
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: lcjq
+    healthcheck:
+      test: ["CMD", "mysql", "-uroot", "-plcjq-synthetic-test", "-h127.0.0.1", "-e", "SELECT 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 50
     ports: ["127.0.0.1::3306"]
   postgres:
     image: postgres:17.11-alpine
     environment:
       POSTGRES_PASSWORD: lcjq-synthetic-test
       POSTGRES_DB: lcjq
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "lcjq"]
+      interval: 2s
+      timeout: 2s
+      retries: 50
     ports: ["127.0.0.1::5432"]

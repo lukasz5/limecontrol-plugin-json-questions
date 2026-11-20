@@ -7,7 +7,8 @@ import hashlib
 import io
 import json
 import os
-import re
+import secrets
+import shutil
 import socket
 import subprocess
 import tempfile
@@ -17,6 +18,7 @@ import zipfile
 from pathlib import Path
 
 from fixture import write_lss
+from author_skeleton import write_author_skeleton
 from prepare import HERE, VERSIONS, prepare
 
 ROOT = HERE.parents[1]
@@ -108,6 +110,11 @@ def qualify(base,tree,env,cmd,work,report):
     sample = import_survey(base,key,ROOT/"examples/fieldwork.lss")
     activate(base,key,sample)
     report["import_activation"] = sample
+    skeleton = work / "author-skeleton.lss"
+    write_author_skeleton(skeleton)
+    author_sid = import_survey(base, key, skeleton)
+    subprocess.run(["node", str(HERE / "author.cjs"), base, str(author_sid), str(work)], env=env, check=True)
+    report["author"] = json.loads((work / "author-report.json").read_text())
     for filename,empty in [("control",True),("stress",False)]:
         path = work / (filename+".lss")
         write_lss(path,stress=True,empty=empty)
@@ -137,6 +144,12 @@ def qualify(base,tree,env,cmd,work,report):
     if actual_values != expected_values:
         raise AssertionError("40x40 CSV differs from source values")
     report["verified_csv_cells"] = 1600
+    env = dict(env,LCJQ_ROLE_RUN=secrets.token_hex(5), LCJQ_ROLE_PASSWORD=secrets.token_hex(18))
+    subprocess.run([*cmd,"lcjqroles",str(sample)],cwd=tree,env=env,check=True)
+    subprocess.run(["node",str(HERE/"roles.cjs"),base,str(sample),str(report["control"]["sid"])],cwd=ROOT,env=env,check=True)
+    report["native_survey_acls"] = True
+    subprocess.run(["node",str(HERE/"lifecycle.cjs"),base],cwd=ROOT,env=env,check=True)
+    report["detach_restore_purge"] = True
     rpc(base,"release_session_key",[key])
 
 
@@ -154,11 +167,15 @@ def main():
     try:
         with tempfile.TemporaryDirectory(prefix="lcjq-ce-") as folder:
             work = Path(folder)
+            release = work / "release"
+            release.mkdir()
+            for filename in ["SHA256SUMS", *(entry.name for entry in options.dist.glob("*.zip"))]:
+                shutil.copyfile(options.dist / filename, release / filename)
+            report["sha256"] = verify_archives(release)
             tree,env,cmd = prepare(options.version,options.engine,options.db_port,work,options.archive,options.php)
-            report["sha256"] = verify_archives(options.dist)
             with http(tree,env,options.php) as base:
                 for action in ("install","update"):
-                    subprocess.run(["node",str(HERE/"admin.cjs"),base,str(options.dist.resolve()),action],env=env,check=True)
+                    subprocess.run(["node",str(HERE/"admin.cjs"),base,str(release),action],env=env,check=True)
                     report["native_zip_"+action] = True
                 report["installation"] = probe(tree,env,cmd,"installed")
                 qualify(base,tree,env,cmd,work,report)

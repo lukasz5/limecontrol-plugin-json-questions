@@ -14,7 +14,11 @@ jobs:
       matrix:
         ls: ['6.15.12', '6.17.19', '7.11.0']
         engine: [mysql, postgres]
-    name: LS ${{ matrix.ls }} / ${{ matrix.engine }}
+        php: ['8.3']
+        include:
+          - {ls: '6.15.12', engine: mysql, php: '8.1.29'}
+          - {ls: '7.11.0', engine: postgres, php: '8.2.27'}
+    name: LS ${{ matrix.ls }} / ${{ matrix.engine }} / PHP ${{ matrix.php }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -24,7 +28,7 @@ jobs:
       - run: python3 scripts/package.py --verify
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '${{ matrix.php }}'
           extensions: pdo_mysql, pdo_pgsql, gd, intl, mbstring, zip, dom, sodium, ldap, imap
           coverage: none
       - uses: actions/setup-node@v4
@@ -56,7 +60,7 @@ jobs:
           python3 tests/integration/run.py --version "$EDITION" --engine "$ENGINE" --db-port "${mapped##*:}" --dist dist --report "$RUNNER_TEMP/qualification.json"
       - uses: actions/upload-artifact@v4
         with:
-          name: qualification-${{ matrix.ls }}-${{ matrix.engine }}
+          name: qualification-${{ matrix.ls }}-${{ matrix.engine }}-${{ matrix.php }}
           path: ${{ runner.temp }}/qualification.json
           if-no-files-found: error
       - name: Clean up

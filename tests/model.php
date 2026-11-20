@@ -53,6 +53,16 @@ $old = LimeControlJsonModel::normalizeLegacy(['Serwis'=>['values'=>['Pomiar',['e
 check(count($old['mapping']) === 3 && count($old['answer']['rows'][0]['cells']) === 2, 'Historical list');
 $oldMatrix = LimeControlJsonModel::normalizeLegacy(['Role'=>['values'=>['Row'=>['Hours'=>0,'_active'=>true,'Other'=>['comment'=>'Text']]]]]);
 check(in_array(0,array_column($oldMatrix['answer']['rows'][0]['cells'],'value'),true), 'Historical matrix zero');
+$flat = LimeControlJsonModel::normalizeLegacy(['Role'=>['Task'],'Role_comment_Task'=>'Example']);
+check($flat['issues'] === [] && array_values($flat['answer']['rows'][0]['cells'])[0]['comment'] === 'Example', 'Legacy flat comments');
+$pruned = LimeControlJsonModel::activeAnswer($choice,$tasks,['CITIES'=>[$cities['CITIES'][1]]]);
+check(array_column($pruned['rows'], 'path') === [['GDY']], 'Previous page edit removes obsolete paths');
+$cycle = $choice;
+$cycle['rules'] = [
+    ['effect'=>'show','target'=>'MEASURE','when'=>['field'=>'self.SERVICE','op'=>'selected']],
+    ['effect'=>'show','target'=>'SERVICE','when'=>['field'=>'self.MEASURE','op'=>'selected']],
+];
+check(in_array('definition.cycle',LimeControlJsonModel::validateDefinition($cycle),true),'Circular visibility rules');
 $native = ['TASKS'=>[]];
 $wide = $matrix;
 $wide['options'] = [];

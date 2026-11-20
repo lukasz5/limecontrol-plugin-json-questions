@@ -1,5 +1,4 @@
-"""Prepare only a fresh, verified CE tree. Python 3.10+, php CLI and a disposable SQL server."""
-import argparse
+"""Prepare only a fresh, verified CE tree. Python 3.12+, php CLI and a disposable SQL server."""
 import hashlib
 import os
 import secrets
@@ -46,6 +45,12 @@ def prepare(edition, engine, db_port, work, archive, php):
     driver, user = ("pgsql", "postgres") if engine == "postgres" else ("mysql", "root")
     env = {**os.environ, "LCJQ_DSN": f"{driver}:host=127.0.0.1;port={db_port};dbname=lcjq;", "LCJQ_DB_USER": user,
            "LCJQ_TABLE_PREFIX": "lcq" + secrets.token_hex(4) + "_", "YII_CONSOLE_COMMANDS": str(HERE)}
+    # PostgreSQL indexes created by LimeSurvey have schema-wide names; table prefixes
+    # alone cannot isolate concurrent installations. Provision one disposable database.
+    name = "lcjq_test_" + secrets.token_hex(9)
+    create = '$pdo=new PDO(getenv("LCJQ_DSN"),getenv("LCJQ_DB_USER"),"lcjq-synthetic-test"); $pdo->exec("CREATE DATABASE " . $argv[1]);'
+    subprocess.run([php,"-r",create,name],env=env,check=True)
+    env["LCJQ_DSN"] = env["LCJQ_DSN"].replace("dbname=lcjq;","dbname="+name+";")
     cmd = [php, "-d", "memory_limit=768M", "application/commands/console.php"]
     subprocess.run([*cmd, "install", "lcqadmin", "LCQtest-Story-4321", "Demo Author", "demo@example.invalid", "verbose"], env=env, cwd=tree, check=True)
     return tree, env, cmd

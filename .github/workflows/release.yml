@@ -39,5 +39,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {contents: write}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'qualification-*', path: reports}
+      - uses: actions/download-artifact@v4
+        with: {name: release-from-github, path: archives}
+      - run: python3 scripts/qualification.py reports archives qualification.json
       - env: {GH_TOKEN: '${{ github.token }}', REPO: '${{ github.repository }}'}
-        run: gh release edit "$GITHUB_REF_NAME" --repo "$REPO" --draft=false --latest
+        run: |
+          gh release upload "$GITHUB_REF_NAME" --repo "$REPO" qualification.json --clobber
+          gh release edit "$GITHUB_REF_NAME" --repo "$REPO" --draft=false --latest

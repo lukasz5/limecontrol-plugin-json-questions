@@ -189,6 +189,9 @@ final class LimeControlJsonModel
             }
             return $rows;
         }
+        if (!is_array($source['rows'])) {
+            return [];
+        }
         foreach ($source['rows'] as $row) {
             if (!is_array($row) || !self::validPath($row['path'] ?? null) || !is_array($row['cells'] ?? null)) {
                 continue;

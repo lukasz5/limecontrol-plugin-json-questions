@@ -108,7 +108,7 @@ class LimeControlJsonQuestions extends PluginBase
             }
             $answer = self::decode($raw);
             if ($answer === null) {
-                throw new CHttpException(422, LimeControlJsonAdmin::message('invalid') . ' (' . $code . ')');
+                throw new CHttpException(422, LimeControlJsonAdmin::errors(['answer.format']) . ' (' . $code . ')');
             }
             if ($raw === '') {
                 continue;
@@ -117,7 +117,7 @@ class LimeControlJsonQuestions extends PluginBase
             $old = self::decode($values[$name] ?? null);
             $definition = $ctx->responseDefinition($code, $old ?: []);
             if (!$definition || isset($answer['revision']) && ($definition['revision'] ?? null) !== $answer['revision']) {
-                throw new CHttpException(422, LimeControlJsonAdmin::message('invalid') . ' (' . $code . ')');
+                throw new CHttpException(422, LimeControlJsonAdmin::errors(['answer.revision']) . ' (' . $code . ')');
             }
             if (!empty($definition['revision']) && !isset($answer['revision'])) {
                 $answer['revision'] = $definition['revision'];
@@ -139,7 +139,7 @@ class LimeControlJsonQuestions extends PluginBase
             $technical = array_intersect(['answer.type','answer.format','answer.path','answer.revision'],
                 LimeControlJsonModel::validateAnswer($technicalDefinition, $answer, [$definition['source'] => $rows]));
             if ($technical) {
-                throw new CHttpException(422, LimeControlJsonAdmin::message('invalid') . ' (' . $code . ')');
+                throw new CHttpException(422, LimeControlJsonAdmin::errors($technical) . ' (' . $code . ')');
             }
         }
     }
@@ -160,7 +160,7 @@ class LimeControlJsonQuestions extends PluginBase
         $values = $ctx->currentValues();
         $old = self::decode($values[$name] ?? '');
         $definition = $ctx->responseDefinition($code, $old ?: []);
-        if (!$definition || $ctx->definitionErrors($code, $definition)) {
+        if (!$definition || $ctx->definitionErrors($code, $definition, false)) {
             $event->set('answers', CHtml::tag('p', ['role'=>'alert'], CHtml::encode(LimeControlJsonAdmin::message('invalid'))));
             return;
         }

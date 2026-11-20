@@ -37,6 +37,7 @@ async function run() {
         assert.equal(await p.locator('input[name=isUpdate]').inputValue(), mode==='update'?'true':'false');
         const install=p.locator('form[action*=installUploadedPlugin]');
         await install.locator('button[type=submit],input[type=submit]').last().click();
+        await p.goto(manager+'/index?pageSize=100');
         const row=p.locator('tr').filter({hasText:'LimeControlJsonQuestions'}).first();
         await row.waitFor();
         if(mode==='install'){

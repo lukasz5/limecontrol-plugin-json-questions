@@ -20,11 +20,11 @@ Pobierz wszystkie pliki tej samej wersji oraz `SHA256SUMS`. W katalogu z plikami
 ## Pierwsza ankieta
 
 1. W panelu zaimportuj [ankietę demonstracyjną](examples/fieldwork.lss). Otwórz jej narzędzia i **LimeControl JSON · Edytor**. Sprawdź źródła pytań oraz regułę ustawioną dla pytania uzupełniającego.
-2. Aby ułożyć ankietę samodzielnie, dodaj zwykłe pytanie wyboru o kodzie `CITY` z opcjami Łódź i Gdynia. Dodaj później trzy pytania typu U z kodami `WORK`, `TIME` i `REASON`. W edytorze połącz je w kolejności podanej w tabeli. Zapisz każde pytanie. Etykiety można przetłumaczyć przy zachowaniu tych samych kodów.
+2. Aby ułożyć ankietę samodzielnie, dodaj zwykłe pytanie wyboru o kodzie `CITIES` z opcjami Łódź i Gdynia. Dodaj później trzy pytania typu U z kodami `WORK`, `TIME` i `REASON`. W edytorze połącz je w kolejności podanej w tabeli. Zapisz każde pytanie. Etykiety można przetłumaczyć przy zachowaniu tych samych kodów.
 
    | Pytanie | Motyw i źródło | Konfiguracja |
    | --- | --- | --- |
-   | WORK | Wybór dla każdej pozycji, źródło CITY | Dodaj opcje wielokrotne MEASURE („Pomiar”) i SERVICE („Serwis”). |
+   | WORK | Wybór dla każdej pozycji, źródło CITIES | Dodaj opcje wielokrotne MEASURE („Pomiar”) i SERVICE („Serwis”). |
    | TIME | Tabela, źródło WORK | Dodaj kolumnę liczbową HOURS („Godziny”). |
    | REASON | Pytanie uzupełniające, źródło TIME | Dodaj opcję OTHER („Inne”) z komentarzem. Pokaż cały wiersz, gdy HOURS w źródle jest większe od 8. |
 

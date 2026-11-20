@@ -10,8 +10,28 @@ final class LimeControlJsonAdmin
         'invalid'=>['Sprawdź definicję i odpowiedź.', 'Check the definition and answer.', 'Definition und Antwort prüfen.'],
         'fix'=>['Popraw konfigurację pytań w edytorze LimeControl JSON.', 'Correct these questions in the LimeControl JSON editor.', 'Diese Fragen im LimeControl-JSON-Editor korrigieren.'],
         'size'=>['Odpowiedź przekroczyła pojemność pola. Podziel blok na mniejsze pytania.', 'This answer exceeds the field capacity. Split the block into smaller questions.', 'Die Antwort überschreitet die Feldgröße. Teilen Sie den Block in kleinere Fragen.'],
+        'definition.version'=>['Sprawdź wersję i typ bloku.', 'Check the block version and type.', 'Version und Art des Blocks prüfen.'],
+        'definition.source'=>['Wybierz obsługiwane wcześniejsze pytanie.', 'Select a supported earlier question.', 'Eine unterstützte frühere Frage auswählen.'],
+        'definition.sourceField'=>['Wskaż istniejącą kolumnę źródła w warunku.', 'Select an existing source column in the condition.', 'Eine vorhandene Quellspalte in der Bedingung auswählen.'],
+        'definition.options'=>['Zdefiniuj od 1 do 256 opcji.', 'Define between 1 and 256 options.', 'Zwischen 1 und 256 Optionen festlegen.'],
+        'definition.option'=>['Sprawdź unikatowe kody, typy i właściwości opcji.', 'Check option codes, types and flags. Codes must be unique.', 'Eindeutige Codes, Typen und Eigenschaften der Optionen prüfen.'],
+        'definition.label'=>['Dodaj etykietę opcji w co najmniej jednym języku (do 2048 bajtów).', 'Add an option label in at least one language (up to 2048 bytes).', 'Eine Optionsbezeichnung in mindestens einer Sprache hinzufügen (bis zu 2048 Byte).'],
+        'definition.rules'=>['Sprawdź pola, operatory i cele reguł.', 'Check rule fields, operators and targets.', 'Felder, Operatoren und Ziele der Regeln prüfen.'],
+        'definition.cycle'=>['Usuń zależność cykliczną z reguł widoczności.', 'Remove the circular dependency in visibility rules.', 'Die zyklische Abhängigkeit in den Sichtbarkeitsregeln entfernen.'],
+        'answer.format'=>['Format odpowiedzi jest nieprawidłowy.', 'The answer format is invalid.', 'Das Antwortformat ist ungültig.'],
+        'answer.revision'=>['Odśwież pytanie, aby użyć właściwej wersji.', 'Reload the question to use the correct revision.', 'Frage neu laden, um die passende Version zu verwenden.'],
+        'answer.path'=>['Wiersze muszą odpowiadać wyborom w pytaniu źródłowym.', 'Rows must match the selections in the source question.', 'Zeilen müssen der Auswahl in der Quellfrage entsprechen.'],
+        'answer.type'=>['Sprawdź typ wprowadzonej wartości.', 'Check the type of the entered value.', 'Typ des eingegebenen Werts prüfen.'],
+        'answer.hidden'=>['Sprawdź odpowiedzi ukryte przez regułę.', 'Check values hidden by a rule.', 'Durch eine Regel ausgeblendete Werte prüfen.'],
+        'answer.required'=>['Uzupełnij wymagane pola.', 'Complete the required fields.', 'Pflichtfelder ausfüllen.'],
+        'answer.comment'=>['Sprawdź komentarz przy wybranej opcji.', 'Check the comment for the selected option.', 'Kommentar zur ausgewählten Option prüfen.'],
+        'answer.exclusive'=>['Wybierz pojedynczą wartość dla opcji wyłącznej.', 'Choose one value for an exclusive option.', 'Bei einer exklusiven Option nur einen Wert auswählen.'],
         'detach'=>['Odłącz motyw i walidację', 'Detach theme and validation', 'Design und Validierung trennen'],
         'detachHelp'=>['Zapisane odpowiedzi i definicje pozostaną dostępne. Pytanie stanie się zwykłym polem tekstowym. Zapisanie konfiguracji w edytorze podłącza je ponownie.', 'Saved answers and definitions remain available. The question becomes a plain text field. Save the configuration in the editor to reconnect it.', 'Gespeicherte Antworten und Definitionen bleiben erhalten. Die Frage wird zum Textfeld. Speichern Sie die Konfiguration im Editor, um sie erneut zu verbinden.'],
+        'purge'=>['Usuń zachowaną konfigurację', 'Delete retained configuration', 'Gespeicherte Konfiguration löschen'],
+        'purgeHelp'=>['Po pobraniu kopii definicji usuń metadane tego odłączonego pytania. Odpowiedzi pozostaną w tabeli ankiety. Historia definicji i słownik tego pytania zostaną usunięte.', 'After downloading a definition backup, remove metadata for this detached question. The response table is retained. Definition history and the codebook for this question will be deleted.', 'Nach dem Herunterladen der Definition die Metadaten dieser getrennten Frage entfernen. Antworten bleiben erhalten. Definitionshistorie und Codebuch dieser Frage werden gelöscht.'],
+        'backup'=>['Pobierz definicje i historię', 'Download definitions and history', 'Definitionen und Historie herunterladen'],
+        'dependent'=>['Najpierw odłącz zależne pytanie', 'Detach the dependent question first', 'Zuerst die abhängige Frage trennen'],
         'detachFirst'=>['Najpierw odłącz pytania w edytorze LimeControl JSON, aby usunąć wywołania funkcji z równań ankiet.', 'Detach the questions in the LimeControl JSON editor first to remove plugin calls from survey equations.', 'Trennen Sie zuerst die Fragen im LimeControl-JSON-Editor, um Plugin-Aufrufe aus den Umfragegleichungen zu entfernen.'],
         'manualEquation'=>['Zmieniono równanie. Usuń jego wywołanie lcjqValid w opcjach logiki pytania i ponów odłączanie.', 'The equation has changed. Remove its lcjqValid call in question logic and retry detaching.', 'Die Gleichung wurde geändert. Entfernen Sie den lcjqValid-Aufruf in der Fragenlogik und trennen Sie die Frage erneut.'],
         'legacy'=>['LimeControl JSON · Raport starych formatów', 'LimeControl JSON · Legacy report', 'LimeControl JSON · Bericht zu Altformaten'],
@@ -52,6 +72,11 @@ final class LimeControlJsonAdmin
         return self::TEXT[$key][$index] ?? $key;
     }
 
+    public static function errors(array $codes)
+    {
+        return implode(' ', array_map(static function ($code) { return self::message($code) . ' (' . $code . ')'; }, array_unique($codes)));
+    }
+
     public static function url($action, $sid, $code = null)
     {
         $args = ['plugin'=>'LimeControlJsonQuestions','function'=>$action,'sid'=>(int)$sid];
@@ -71,10 +96,10 @@ final class LimeControlJsonAdmin
     {
         $request = App()->request;
         $sid = (int)$request->getQuery('sid', 0);
-        if (!in_array($action, ['editor','export','dictionary','legacy'], true) || !$sid) {
+        if (!in_array($action, ['editor','export','dictionary','legacy','backup'], true) || !$sid) {
             throw new CHttpException(404);
         }
-        $editing = $action === 'editor';
+        $editing = in_array($action,['editor','backup'],true);
         if (App()->user->isGuest || (!$editing && !Permission::model()->hasSurveyPermission($sid,'responses','read'))
             || !Permission::model()->hasSurveyPermission($sid,
             $editing ? 'surveycontent' : 'responses', $editing ? 'update' : 'export')) {
@@ -92,6 +117,17 @@ final class LimeControlJsonAdmin
         if (!is_string($code) || $code !== '' && !isset($ctx->questions[$code])) {
             throw new CHttpException(404);
         }
+        if ($action === 'backup') {
+            if ($request->requestType !== 'GET' || !isset($ctx->questions[$code])) { throw new CHttpException(400); }
+            $qid = $ctx->questions[$code]['qid'];
+            $snapshot = ['version'=>1,'questionCode'=>$code,'current'=>$ctx->definition($code),
+                'detached'=>json_decode($ctx->attribute($qid,LimeControlJsonContext::DETACHED),true),
+                'history'=>json_decode($ctx->attribute($qid,LimeControlJsonContext::HISTORY),true) ?: []];
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="limecontrol-question-' . (int)$qid . '.json"');
+            header('Cache-Control: private, no-store');
+            echo self::json($snapshot); App()->end(); return;
+        }
         if ($request->isPostRequest) {
             if (!is_string($request->getPost($request->csrfTokenName)) || !hash_equals($request->csrfToken, $request->getPost($request->csrfTokenName))) {
                 throw new CHttpException(403);
@@ -100,6 +136,11 @@ final class LimeControlJsonAdmin
                 throw new CHttpException(400);
             }
             $expected = $request->getPost('expectedRevision', '');
+            if ($request->getPost('action') === 'purge') {
+                self::purge($ctx, $code, $expected);
+                App()->getController()->redirect(self::url('editor',$sid,$code));
+                return;
+            }
             if ($request->getPost('action') === 'detach') {
                 self::detach($sid, $code, $expected);
                 App()->getController()->redirect(self::url('editor', $sid, $code));
@@ -137,7 +178,7 @@ final class LimeControlJsonAdmin
             unset($def['revision']);
             $errors = $ctx->definitionErrors($code, $def);
             if ($errors) {
-                throw new CHttpException(422, self::message('invalid') . ' ' . implode(', ', $errors));
+                throw new CHttpException(422, self::errors($errors));
             }
             $theme = LimeControlJsonContext::THEMES[$def['kind']];
             if (!self::themeExists($theme)) {
@@ -196,6 +237,11 @@ final class LimeControlJsonAdmin
             if (!$old || ($old['revision'] ?? '') !== $expected) {
                 throw new CHttpException(409, self::message('stale'));
             }
+            foreach (array_keys($ctx->questions) as $other) {
+                if (($ctx->definition($other)['source'] ?? null) === $code) {
+                    throw new CHttpException(409, self::message('dependent') . ' ' . $other);
+                }
+            }
             $managed = LimeControlJsonContext::equation($code);
             $equation = trim($ctx->attribute($qid, 'em_validation_q'));
             if ($equation === $managed) {
@@ -208,8 +254,12 @@ final class LimeControlJsonAdmin
             $db->createCommand()->delete('{{question_attributes}}','qid=:q AND attribute=:a',[':q'=>$qid, ':a'=>LimeControlJsonContext::DETACHED]);
             $db->createCommand()->update('{{question_attributes}}',['attribute'=>LimeControlJsonContext::DETACHED],
                 'qid=:q AND attribute=:a',[':q'=>$qid, ':a'=>LimeControlJsonContext::DEF]);
-            $db->createCommand()->update('{{question_attributes}}',['value'=>$equation], 'qid=:q AND attribute=:a',
-                [':q'=>$qid, ':a'=>'em_validation_q']);
+            $equationParams = [':q'=>$qid, ':a'=>'em_validation_q'];
+            if ($equation === '') {
+                $db->createCommand()->delete('{{question_attributes}}', 'qid=:q AND attribute=:a', $equationParams);
+            } else {
+                $db->createCommand()->update('{{question_attributes}}',['value'=>$equation], 'qid=:q AND attribute=:a', $equationParams);
+            }
             $db->createCommand()->update('{{questions}}',['question_theme_name'=>'core'],'qid=:q AND sid=:s',[':q'=>$qid,':s'=>$sid]);
             $tx->commit();
             LimeControlJsonContext::clear();
@@ -218,6 +268,30 @@ final class LimeControlJsonAdmin
         } catch (Throwable $error) {
             if ($tx->active) { $tx->rollback(); }
             throw $error;
+        }
+    }
+
+    private static function purge($ctx, $code, $expected)
+    {
+        $qid = (int)$ctx->questions[$code]['qid'];
+        $sid = (int)$ctx->survey->sid;
+        $db = App()->db;
+        $tx = $db->beginTransaction();
+        try {
+            $lock = in_array($db->driverName, ['mysql','pgsql'],true) ? ' FOR UPDATE' : '';
+            $db->createCommand('SELECT qid FROM {{questions}} WHERE qid=:q AND sid=:s' . $lock)->queryScalar([':q'=>$qid,':s'=>$sid]);
+            LimeControlJsonContext::clear();
+            $ctx = LimeControlJsonContext::get($sid);
+            $retained = $ctx->attribute($qid,LimeControlJsonContext::DETACHED);
+            if ($ctx->definition($code) || !$retained || !is_string($expected) || !hash_equals(hash('sha256',$retained),$expected)) {
+                throw new CHttpException(409, self::message('stale'));
+            }
+            $db->createCommand()->delete('{{question_attributes}}', ['and','qid=:qid',
+                ['in','attribute',[LimeControlJsonContext::DETACHED,LimeControlJsonContext::HISTORY]]], [':qid'=>$qid]);
+            $tx->commit();
+        } catch (Throwable $e) {
+            if ($tx->active) { $tx->rollback(); }
+            throw $e;
         }
     }
 

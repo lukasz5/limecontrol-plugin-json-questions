@@ -63,7 +63,7 @@ function exercise() {
     verify(groups(work).length === 2, 'native checkbox sources');
     inputAt(work, 0, 0).click();
     inputAt(work, 1, 1).click();
-    verify(groups(matrix).map(group => group.querySelector('legend').textContent).join('|') === 'Łódź / Pomiar|Gdynia / Serwis', 'translated pair labels');
+    verify(groups(matrix).map(group => group.querySelector('legend,th[scope=row] > span').textContent).join('|') === 'Łódź / Pomiar|Gdynia / Serwis', 'translated pair labels');
     change(inputAt(matrix, 0, 0), '9');
     change(inputAt(matrix, 1, 0), '0');
     verify(read(matrix).rows[1].cells.HOURS.value === 0, 'zero as a number');
@@ -100,7 +100,7 @@ function exercise() {
         sources: { CITY: [{ path:['X'], label:'<em>Location</em>' }] }, sourceFields: {}
     });
     api.mount();
-    verify(!safe.querySelector('b,em') && safe.querySelector('.lcjq-label span').textContent === '<b>Sample</b>' && safe.querySelector('legend').textContent === '<em>Location</em>', 'untrusted labels are text');
+    verify(!safe.querySelector('b,em') && safe.querySelector('.lcjq-label span').textContent === '<b>Sample</b>' && safe.querySelector('th[scope=row] > span').textContent === '<em>Location</em>', 'untrusted labels are text');
     const limited = addBlock('LIMIT', def('matrix', 'CITY', [option('TEXT', label('Text'), 'text')]), {
         sources: { CITY: [{ path:['X'], label:'X' }] }, sourceFields: {}, maxBytes: 180
     });
@@ -120,8 +120,27 @@ function exercise() {
     const packed = JSON.stringify({ version: 1, revision:'r1', rows });
     const bulk = addBlock('BULK', def('matrix','ITEMS',columns), { sources:{ ITEMS:source }, sourceFields:{} }, packed);
     api.mount();
+    const first = bulk.querySelector('tbody input[type=number]');
+    verify(bulk.querySelectorAll('thead th[scope=col]').length === 41 && bulk.querySelectorAll('tbody th[scope=row]').length === 40 &&
+        first.getAttribute('aria-labelledby').split(' ').map(id=>document.getElementById(id).textContent).join('|') === 'Row 0|Column 0',
+        'matrix semantics associate 40 column headers and row names');
+    bulk.style.maxWidth = '350px';
+    const scroll = bulk.querySelector('.lcjq-scroll');
+    verify(scroll.tabIndex === 0 && scroll.scrollWidth > scroll.clientWidth && getComputedStyle(scroll).overflowX === 'auto',
+        'matrix scrolls inside a focusable narrow viewport');
     verify(bulk.querySelectorAll('input[type=number]').length === 1600 && new FormData(form).get('QBULK') === packed, '1600 cell round-trip via one successful form control');
     verify(window.lcjqValid(packed, 'BULK', 5), '1600 validated cells');
+    const timings = [];
+    for (let i = 0; i < 24; i++) {
+        const start = performance.now();
+        change(first, String(i));
+        const elapsed = performance.now() - start;
+        verify(read(bulk).rows[0].cells.C0.value === i, 'synchronous storage after a matrix edit');
+        if (i > 3) timings.push(elapsed);
+    }
+    timings.sort((a,b)=>a-b);
+    document.documentElement.dataset.lcjqEdit = [timings[10],timings[18]].map(n=>n.toFixed(1)).join('/');
+
     verify(!window.lcjqValid(packed.replace('"value":0', '"value":"0"'), 'BULK', 5), 'numeric type mismatch');
     verify(api.condition({all:[{field:'source.count',op:'gte',value:2},{not:{field:'self.NO',op:'selected'}},{any:[{field:'source.H',op:'gt',value:8},{field:'source.H',op:'eq',value:'0'}]}]}, {}, {H:{value:0}}, 2), 'numeric equality, count, boolean composition');
 }
@@ -147,6 +166,7 @@ try {
         '--user-data-dir=' + path.join(tmp, 'profile'), '--dump-dom', 'file://' + file], { encoding:'utf8', timeout:55000, maxBuffer:8000000 });
     assert.equal(result.status, 0, String(result.error || result.stderr).slice(-1800));
     assert.match(result.stdout, /<body>LCJQ_BROWSER_PASS<\/body>/, result.stdout.match(/<body>(LCJQ_BROWSER_FAIL[^<]*)/)?.[1] || 'Browser did not complete the suite');
+    console.log('40 x 40 synchronous input to updated DOM and storage, median/p95 (ms):', result.stdout.match(/data-lcjq-edit="([^"]+)"/)?.[1]);
     console.log('PASS Chromium respondent controls, dependent selections, access by keyboard focus, resume, filter, checked field count and 1600 cells');
 } finally {
     fs.rmSync(tmp, { recursive:true, force:true });

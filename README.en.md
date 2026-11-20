@@ -20,11 +20,11 @@ Download files from the same release, including SHA256SUMS. In the download dire
 ## Build your first survey
 
 1. Import the [example LSS](examples/fieldwork.lss). Open its survey tools and choose **LimeControl JSON · Editor**. Inspect the source question for each block and the condition on the follow-up.
-2. To build it from scratch, add a native choice question called CITY with Łódź and Gdynia as options. Add three subsequent Huge free text questions called WORK, TIME and REASON. Configure each block in the editor and save it.
+2. To build it from scratch, add a native choice question called CITIES with Łódź and Gdynia as options. Add three subsequent Huge free text questions called WORK, TIME and REASON. Configure each block in the editor and save it.
 
    | Block | Theme and source | Settings |
    | --- | --- | --- |
-   | WORK | Choice for each item, CITY | Add MEASURE and SERVICE as multiple-choice options. |
+   | WORK | Choice for each item, CITIES | Add MEASURE and SERVICE as multiple-choice options. |
    | TIME | Table from previous answers, WORK | Add a numeric HOURS column. |
    | REASON | Follow-up, TIME | Add OTHER with a required comment. Show the row when HOURS in its source is greater than 8. |
 
