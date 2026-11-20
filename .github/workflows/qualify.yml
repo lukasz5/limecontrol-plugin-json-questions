@@ -32,7 +32,9 @@ jobs:
           limesurvey: 'true'
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
-      - run: npm ci && npx playwright install --with-deps chromium
+      - run: npm ci
+      - name: Verify the hosted runner browser
+        run: /usr/bin/google-chrome --version
       - name: Start disposable database
         env:
           ENGINE: ${{ matrix.engine }}
@@ -51,6 +53,7 @@ jobs:
         env:
           EDITION: ${{ matrix.ls }}
           ENGINE: ${{ matrix.engine }}
+          CHROMIUM_PATH: /usr/bin/google-chrome
           PLAYWRIGHT_MODULE: ${{ github.workspace }}/node_modules/playwright
         run: |
           inner=3306
