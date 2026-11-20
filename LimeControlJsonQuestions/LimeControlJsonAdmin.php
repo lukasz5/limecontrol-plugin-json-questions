@@ -326,7 +326,7 @@ final class LimeControlJsonAdmin
         }
         header('Content-Type: text/html; charset=UTF-8');
         header('Cache-Control: private, no-store');
-        require __DIR__ . '/editor.php';
+        require __DIR__ . '/views/editor.php';
         App()->end();
     }
 

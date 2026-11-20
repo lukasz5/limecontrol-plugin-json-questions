@@ -70,8 +70,12 @@ async function getCsv(admin, survey, type) {
         await clickCheck(page.getByRole('checkbox',{name:'Gdynia',exact:true}));
         await move(page);
         const visibleRows = () => page.locator('.lcjq-row:visible');
+        const waitRows = async expected => {
+            await page.waitForFunction(count => [...document.querySelectorAll('.lcjq-row')].filter(row=>row.getClientRects().length).length===count, expected);
+            assert.equal(await visibleRows().count(),expected);
+        };
         await visibleRows().first().waitFor();
-        assert.equal(await visibleRows().count(),2);
+        await waitRows(2);
         const cityRow = name => visibleRows().filter({has:page.locator('legend, th[scope=row]',{hasText:name})});
         await cityRow('Łódź').getByRole('checkbox',{name:/Pomiar/}).check();
         await cityRow('Gdynia').getByRole('checkbox',{name:/Serwis/}).check();
@@ -79,7 +83,7 @@ async function getCsv(admin, survey, type) {
         await move(page);
         await cityRow('Łódź').getByRole('spinbutton').fill('9');
         await cityRow('Gdynia').getByRole('spinbutton').fill('0');
-        assert.equal(await visibleRows().count(),2);
+        await waitRows(2);
         const screenshot = process.env.LCQ_SCREENSHOT;
         if (screenshot) await page.screenshot({path:screenshot});
         await move(page,'moveprev');
@@ -112,12 +116,12 @@ async function getCsv(admin, survey, type) {
         await gdynia.click();
         assert.equal(await gdynia.evaluate(label=>label.control.checked),false);
         await move(page);
-        assert.equal(await visibleRows().count(),1);
+        await waitRows(1);
         await move(page);
-        assert.equal(await visibleRows().count(),1);
+        await waitRows(1);
         assert.equal(await cityRow('Łódź').getByRole('spinbutton').inputValue(),'9');
         await move(page);
-        assert.equal(await visibleRows().count(),1);
+        await waitRows(1);
         checks.removed_source_pruned=true;
         // Restore the selected city and enter a new value for that branch.
         await move(page,'moveprev'); await move(page,'moveprev'); await move(page,'moveprev');
@@ -128,7 +132,7 @@ async function getCsv(admin, survey, type) {
         await cityRow('Gdynia').getByRole('spinbutton').fill('0');
         await move(page);
         await cityRow('Łódź').waitFor();
-        assert.equal(await visibleRows().count(),1);
+        await waitRows(1);
         await cityRow('Łódź').getByRole('checkbox',{name:/Inne/}).check();
         const comment=cityRow('Łódź').getByRole('textbox');
         const maxBytes=await page.locator('.lcjq-block').evaluate(el=>JSON.parse(el.dataset.lcjq).maxBytes);
