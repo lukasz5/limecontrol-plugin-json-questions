@@ -38,6 +38,7 @@ jobs:
       - run: unzip -q dist/LimeControlJsonQuestions-*.zip -d "$RUNNER_TEMP/lcjq-zip"
       - run: node tests/respondent.browser.cjs && node tests/respondent.parity.cjs
         env:
+          CHROMIUM: /usr/bin/google-chrome
           LCJQ_ASSETS: ${{ runner.temp }}/lcjq-zip/LimeControlJsonQuestions/assets
       - uses: actions/upload-artifact@v4
         with: {name: candidate-packages, path: dist, if-no-files-found: error}
