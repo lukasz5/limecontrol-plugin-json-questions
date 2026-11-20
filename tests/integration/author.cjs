@@ -11,7 +11,7 @@ const { login } = require('./admin.cjs');
 const [base, sid, work] = process.argv.slice(2);
 const loopback = new URL(base);
 if (!['127.0.0.1','localhost'].includes(loopback.hostname) || !/^\d+$/.test(sid)) throw new Error('An isolated loopback survey is required');
-const surveyOverview = base + '/index.php/surveyAdministration/view?surveyid=' + sid;
+const surveySettings = base + '/index.php/surveyAdministration/rendersidemenulink/surveyid/' + sid + '/subaction/generalsettings';
 const fixture = {
     WORK: { kind:'choice', source:'CITIES', options:[['MEASURE','multi','Pomiar','Measurement','Messung'],['SERVICE','multi','Serwis','Service','Wartung']] },
     TIME: { kind:'matrix', source:'WORK', options:[['HOURS','number','Liczba godzin','Hours','Stunden']] },
@@ -86,7 +86,7 @@ async function run() {
     try {
         page=await browser.newPage();page.setDefaultTimeout(14000);
         await login(page,base);
-        await page.goto(surveyOverview);
+        await page.goto(surveySettings);
         await page.locator('#ls-tools-button').click();
         await page.locator('a[href*="LimeControlJsonQuestions"][href*="function=editor"]:visible').first().click();
         await page.locator('#lcjq-editor').waitFor();
@@ -131,7 +131,7 @@ async function run() {
         await next(page,'movesubmit');
         const warning = page.getByRole('dialog').filter({hasText:/wymaganej formie|wymaganej formy|odpowiedzi/}).first();
         await warning.waitFor();
-        await warning.getByRole('button',{name:/Zamknij|Close/}).last().click();
+        await page.getByText('Zamknij',{exact:true}).filter({visible:true}).last().click();
         await warning.waitFor({state:'hidden'});
         await last.getByRole('textbox').fill('Pomiar po zmianie pogody');
         await next(page,'movesubmit');

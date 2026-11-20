@@ -21,12 +21,20 @@ class LcjqProbeCommand extends CConsoleCommand
             SettingGlobal::setSetting('RPCInterface', 'json');
             echo "LCJQ " . json_encode(['edition'=>App()->getConfig('versionnumber'), 'build'=>App()->getConfig('buildnumber'),
                 'php'=>PHP_VERSION,'database'=>App()->db->createCommand('SELECT VERSION()')->queryScalar()]) . PHP_EOL;
+        } elseif ($task === 'plugin-state') {
+            $plugin = Plugin::model()->findByAttributes(['name' => 'LimeControlJsonQuestions']);
+            echo 'LCJQ ' . json_encode(['enabled' => (int)$plugin->active === 1]) . PHP_EOL;
         } elseif ($task === 'inspect') {
             $sid = filter_var($args[1], FILTER_VALIDATE_INT);
             $survey = Survey::model()->findByPk($sid);
             if (!$survey || $survey->active !== 'Y') throw new RuntimeException('Active test survey expected');
             $model = SurveyDynamic::model($sid);
-            echo "LCJQ " . json_encode(['columns'=>array_keys($model->getTableSchema()->columns), 'responses'=>$model->count()]) . PHP_EOL;
+            $hash = hash_init('sha256');
+            foreach ($model->findAll(['order'=>'id ASC']) as $record) {
+                hash_update($hash, json_encode($record->attributes, JSON_THROW_ON_ERROR));
+            }
+            echo "LCJQ " . json_encode(['columns'=>array_keys($model->getTableSchema()->columns),
+                'responses'=>$model->count(), 'response_digest'=>hash_final($hash)]) . PHP_EOL;
         } else {
             throw new InvalidArgumentException('Unknown test probe');
         }

@@ -32,7 +32,7 @@ async function run(base) {
             const input=p.getByRole('checkbox',{name:city,exact:true});
             await p.locator('label[for="'+await input.getAttribute('id')+'"]').first().click();
         }
-        const row=(block,label)=>block.locator('.lcjq-row').filter({has:p.locator('legend',{hasText:label})});
+        const row=(block,label)=>block.locator('.lcjq-row').filter({has:p.locator('legend, th[scope=row]',{hasText:label})});
         await row(work,'Łódź').getByRole('checkbox',{name:'Measurement'}).check();
         await row(work,'Gdynia').getByRole('checkbox',{name:'Service'}).check();
         await row(time,'Łódź').getByRole('spinbutton').fill('9');

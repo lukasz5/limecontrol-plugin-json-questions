@@ -19,7 +19,7 @@ Pobierz wszystkie pliki tej samej wersji oraz `SHA256SUMS`. W katalogu z plikami
 
 ## Pierwsza ankieta
 
-1. W panelu zaimportuj [ankietę demonstracyjną](examples/fieldwork.lss). Otwórz jej narzędzia i **LimeControl JSON · Edytor**. Sprawdź źródła pytań oraz regułę ustawioną dla pytania uzupełniającego.
+1. W panelu zaimportuj [ankietę demonstracyjną](examples/fieldwork.lss). W ustawieniach administracyjnych ankiety otwórz **Narzędzia → LimeControl JSON · Edytor**. W LS 7.11 z nowym edytorem widok „Struktura” otwiera się osobno. Do menu Narzędzia prowadzi adres `index.php/surveyAdministration/rendersidemenulink/surveyid/SID/subaction/generalsettings` w Twojej instalacji. Zastąp `SID` numerem ankiety. Sprawdź źródła pytań oraz regułę ustawioną dla pytania uzupełniającego.
 2. Aby ułożyć ankietę samodzielnie, dodaj zwykłe pytanie wyboru o kodzie `CITIES` z opcjami Łódź i Gdynia. Dodaj później trzy pytania typu U z kodami `WORK`, `TIME` i `REASON`. W edytorze połącz je w kolejności podanej w tabeli. Zapisz każde pytanie. Etykiety można przetłumaczyć przy zachowaniu tych samych kodów.
 
    | Pytanie | Motyw i źródło | Konfiguracja |
@@ -35,13 +35,24 @@ Edytor pozwala grupować porównania za pomocą „wszystkie”, „dowolny” i
 
 ## Duże ankiety, dane i odzyskiwanie
 
-Każdy blok ma jedną fizyczną kolumnę, również gdy wyświetla wiele wierszy i kolumn. Pozostałe natywne pytania nadal zajmują odpowiednie pola LimeSurvey. Rozmiar odpowiedzi w bajtach ogranicza pojemność bloku. Przy komunikacie o przekroczeniu limitu podziel kwestionariusz na mniejsze bloki. Natywna statystyka i standardowy eksport traktują odpowiedź typu U jako tekst. CSV wtyczki rozpisuje poszczególne wartości. Raport historyczny pomaga interpretować odpowiedzi zapisane przez motywy EU-Consult. Walidacja wymaga JavaScriptu w przeglądarce respondenta oraz działającej wtyczki na serwerze.
+Każdy blok ma jedną fizyczną kolumnę, również gdy wyświetla wiele wierszy i kolumn. Pozostałe natywne pytania nadal zajmują odpowiednie pola LimeSurvey. W teście macierz 40 × 40 zajęła 33 622 bajty. Na testowym MySQL pole TEXT pozwalało na 65 535 bajtów, a na PostgreSQL limit wtyczki wynosił 2 MiB. Przy szyfrowaniu pola MySQL wtyczka rezerwuje miejsce na zaszyfrowaną treść. Przy komunikacie o przekroczeniu limitu podziel kwestionariusz na mniejsze bloki. Natywna statystyka i standardowy eksport traktują odpowiedź typu U jako tekst. CSV wtyczki rozpisuje poszczególne wartości. Raport historyczny pomaga interpretować odpowiedzi zapisane przez motywy EU-Consult. Walidacja wymaga JavaScriptu w przeglądarce respondenta oraz działającej wtyczki na serwerze.
 
 Przed aktualizacją wykonaj kopię bazy, ankiety i dotychczasowych ZIP-ów. Po aktualizacji wznów odpowiedź testową i sprawdź eksport. Przed usunięciem zestawu zapisz CSV oraz słownik, a następnie skorzystaj z funkcji **Odłącz motyw i walidację** dla pytań objętych konfiguracją. Dla pełnego odinstalowania pobierz kopię definicji, odpinaj bloki od ostatniego pytania w łańcuchu i wybierz **Usuń zachowaną konfigurację** przy każdym odpiętym pytaniu. Wyłącz wtyczkę i usuń nieużywane motywy oraz wtyczkę w ich menedżerach. Podstawowe pytania typu U i zapisane w nich odpowiedzi należą do ankiety. Sama wtyczka nie tworzy tabel.
 
 ## Zgodność i rozwój
 
-Macierz kwalifikacji obejmuje CE 6.15.12, 6.17.19 oraz 7.11.0 na MySQL/InnoDB i PostgreSQL. Dokładny wynik dla każdej kombinacji udostępnia zadanie kwalifikacyjne archiwów pobranych z roboczego wydania. [Wyniki uruchomień wydaniowych](https://github.com/lukasz5/limecontrol-plugin-json-questions/actions/workflows/release.yml)
+Poniższe wyniki pochodzą z czystych lokalnych instalacji testujących cztery archiwa wersji 0.1.0. W każdej konfiguracji sprawdzono import ZIP, edytor autora, przejście i wznowienie ankiety oraz eksport wszystkich 1600 komórek. [Raport testów lokalnych](docs/qualification-local.json)
+
+| LimeSurvey CE | PHP | Baza danych | Kolumny SQL przed i po dodaniu bloku 40 × 40 | Wynik |
+| --- | --- | --- | --- | --- |
+| 6.15.12 | 8.3.28 | MySQL 8.4.13 | 47 → 48 | Przeszedł |
+| 6.15.12 | 8.3.28 | PostgreSQL 17.11 | 47 → 48 | Przeszedł |
+| 6.17.19 | 8.3.28 | MySQL 8.4.13 | 47 → 48 | Przeszedł |
+| 6.17.19 | 8.3.28 | PostgreSQL 17.11 | 47 → 48 | Przeszedł |
+| 7.11.0+261116 | 8.3.28 | MySQL 8.4.13 | 48 → 49 | Przeszedł |
+| 7.11.0+261116 | 8.3.28 | PostgreSQL 17.11 | 48 → 49 | Przeszedł |
+
+Wydanie zawiera też raport z powtórzenia kwalifikacji na plikach pobranych z GitHub Release. Podaje dokładne wersje PHP, bazy i sumy wszystkich czterech ZIP-ów. [Raport wersji 0.1.0](https://github.com/lukasz5/limecontrol-plugin-json-questions/releases/download/v0.1.0/qualification.json)
 
 ```sh
 composer install

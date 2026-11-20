@@ -19,7 +19,7 @@ Download files from the same release, including SHA256SUMS. In the download dire
 
 ## Build your first survey
 
-1. Import the [example LSS](examples/fieldwork.lss). Open its survey tools and choose **LimeControl JSON · Editor**. Inspect the source question for each block and the condition on the follow-up.
+1. Import the [example LSS](examples/fieldwork.lss). Open the survey administration settings and choose **Tools → LimeControl JSON · Editor**. In LS 7.11 with the new editor, Structure opens separately. To reach the Tools menu, open `index.php/surveyAdministration/rendersidemenulink/surveyid/SID/subaction/generalsettings` on your installation and replace `SID` with the survey ID. Inspect the source question for each block and the condition on the follow-up.
 2. To build it from scratch, add a native choice question called CITIES with Łódź and Gdynia as options. Add three subsequent Huge free text questions called WORK, TIME and REASON. Configure each block in the editor and save it.
 
    | Block | Theme and source | Settings |
@@ -35,13 +35,24 @@ Rules combine comparisons using all, any and not. Configure visibility, required
 
 ## Large surveys, data and removal
 
-Each block uses one physical response column regardless of the number of visual cells. Other native questions still consume their usual columns. The maximum payload size also limits each block. Split it into smaller blocks if the size limit is reached. Native statistics and the standard response export treat type U as text. The plugin CSV exposes the individual values. The legacy report helps interpret historical answers from the EU-Consult themes. Completing an interactive block requires JavaScript and an active plugin.
+Each block uses one physical response column regardless of the number of visual cells. Other native questions still consume their usual columns. The tested 40 × 40 matrix used 33,622 bytes. The MySQL TEXT column allowed 65,535 bytes on the tested installations. On PostgreSQL the plugin limit was 2 MiB. For an encrypted MySQL field the plugin reserves space for the encrypted representation. Split it into smaller blocks if the size limit is reached. Native statistics and the standard response export treat type U as text. The plugin CSV exposes the individual values. The legacy report helps interpret historical answers from the EU-Consult themes. Completing an interactive block requires JavaScript and an active plugin.
 
 Before upgrading, back up the survey, database and installed archives. Resume a test response and check its export after updating. Before removal, export the CSV and codebook, then use **Detach theme and validation** for the configured questions. For a complete uninstall, download a backup of the definitions, detach blocks starting with the last question in the chain and choose **Delete retained configuration** for each detached question. Deactivate the plugin and remove unused themes and the plugin in their respective managers. The native U questions and their saved responses belong to the survey. The plugin creates no tables.
 
 ## Compatibility and development
 
-Qualification targets CE 6.15.12, 6.17.19 and 7.11.0 on MySQL/InnoDB and PostgreSQL. Individual qualification jobs identify the exact configuration and install archives fetched from the draft release. [Release qualification runs](https://github.com/lukasz5/limecontrol-plugin-json-questions/actions/workflows/release.yml)
+These results were obtained on fresh local installations using the four archives for version 0.1.0. Every configuration passed ZIP import, survey authoring, respondent completion and resume, and export of all 1,600 cells. [Local qualification report](docs/qualification-local.json)
+
+| LimeSurvey CE | PHP | Database | SQL columns before and after adding a 40 × 40 block | Result |
+| --- | --- | --- | --- | --- |
+| 6.15.12 | 8.3.28 | MySQL 8.4.13 | 47 → 48 | Passed |
+| 6.15.12 | 8.3.28 | PostgreSQL 17.11 | 47 → 48 | Passed |
+| 6.17.19 | 8.3.28 | MySQL 8.4.13 | 47 → 48 | Passed |
+| 6.17.19 | 8.3.28 | PostgreSQL 17.11 | 47 → 48 | Passed |
+| 7.11.0+261116 | 8.3.28 | MySQL 8.4.13 | 48 → 49 | Passed |
+| 7.11.0+261116 | 8.3.28 | PostgreSQL 17.11 | 48 → 49 | Passed |
+
+The release also includes a repeat qualification on archives downloaded from GitHub Release. It records the actual PHP and database versions and all four ZIP checksums. [Version 0.1.0 qualification report](https://github.com/lukasz5/limecontrol-plugin-json-questions/releases/download/v0.1.0/qualification.json)
 
 ```sh
 composer install

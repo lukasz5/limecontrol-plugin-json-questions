@@ -26,11 +26,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with: {name: '${{ inputs.artifact }}', path: dist}
       - run: python3 scripts/package.py --verify
-      - uses: shivammathur/setup-php@v2
+      - uses: ./.github/actions/php-cli
         with:
-          php-version: '${{ matrix.php }}'
-          extensions: pdo_mysql, pdo_pgsql, gd, intl, mbstring, zip, dom, sodium, ldap, imap
-          coverage: none
+          version: '${{ matrix.php }}'
+          limesurvey: 'true'
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
       - run: npm ci && npx playwright install --with-deps chromium

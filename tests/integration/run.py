@@ -103,6 +103,36 @@ def http(tree,env,php):
                 proc.terminate()
 
 
+def native_deactivation(base, key, sample, tree, env, cmd, report):
+    # Only this runner provisions a database with this unguessable name.
+    # Keep the sample with its responses. Reclaim the other wholly synthetic surveys.
+    if ";dbname=lcjq_test_" not in env["LCJQ_DSN"]:
+        raise RuntimeError("Native cleanup requires the runner-owned disposable database")
+    def toggle(action):
+        subprocess.run(["node",str(HERE/"toggle.cjs"),base,action,str(sample)],cwd=ROOT,env=env,check=True)
+    toggle("deactivate")
+    if not probe(tree,env,cmd,"plugin-state")["enabled"]:
+        raise RuntimeError("LimeSurvey incorrectly disabled a plugin with live validation dependencies")
+    before = probe(tree,env,cmd,"inspect",str(sample))
+    for survey in rpc(base,"list_surveys",[key]):
+        other = int(survey["sid"])
+        if other != sample:
+            result = rpc(base,"delete_survey",[key,other])
+            if result.get("status") != "OK":
+                raise RuntimeError(f"Synthetic survey cleanup failed: {result}")
+    toggle("detach")
+    toggle("deactivate")
+    if probe(tree,env,cmd,"plugin-state")["enabled"]:
+        raise RuntimeError("LimeSurvey could not disable the detached plugin")
+    if before != probe(tree,env,cmd,"inspect",str(sample)):
+        raise RuntimeError("Native saved responses changed after deactivation")
+    toggle("activate")
+    if not probe(tree,env,cmd,"plugin-state")["enabled"]:
+        raise RuntimeError("Reactivation failed")
+    report["native_deactivation_blocked_then_permitted"] = True
+    report["reactivation_preserved_responses"] = before["responses"]
+
+
 def qualify(base,tree,env,cmd,work,report):
     key = rpc(base,"get_session_key",["lcqadmin","LCQtest-Story-4321"])
     if not isinstance(key,str):
@@ -150,6 +180,9 @@ def qualify(base,tree,env,cmd,work,report):
     report["native_survey_acls"] = True
     subprocess.run(["node",str(HERE/"lifecycle.cjs"),base],cwd=ROOT,env=env,check=True)
     report["detach_restore_purge"] = True
+    subprocess.run(["node",str(HERE/"all-in-one.cjs"),base],env=env,cwd=ROOT,check=True)
+    report["same_page_dependencies"] = True
+    native_deactivation(base,key,sample,tree,env,cmd,report)
     rpc(base,"release_session_key",[key])
 
 

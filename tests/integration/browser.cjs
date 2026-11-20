@@ -108,9 +108,9 @@ async function getCsv(admin, survey, type) {
         // Remove a parent choice after the dependent answers have already been saved.
         await move(page,'moveprev');
         await move(page,'moveprev');
-        const gdynia=page.getByRole('checkbox',{name:'Gdynia',exact:true});
-        await clickCheck(gdynia);
-        assert.equal(await gdynia.isChecked(),false);
+        const gdynia=page.locator('label').filter({hasText:/Gdynia/}).first();
+        await gdynia.click();
+        assert.equal(await gdynia.evaluate(label=>label.control.checked),false);
         await move(page);
         assert.equal(await visibleRows().count(),1);
         await move(page);
@@ -121,7 +121,7 @@ async function getCsv(admin, survey, type) {
         checks.removed_source_pruned=true;
         // Restore the selected city and enter a new value for that branch.
         await move(page,'moveprev'); await move(page,'moveprev'); await move(page,'moveprev');
-        await clickCheck(page.getByRole('checkbox',{name:'Gdynia',exact:true}));
+        await page.locator('label').filter({hasText:/Gdynia/}).first().click();
         await move(page);
         await cityRow('Gdynia').getByRole('checkbox',{name:/Serwis/}).check();
         await move(page);
@@ -181,6 +181,16 @@ async function getCsv(admin, survey, type) {
         await values.last().fill('1601');
         await values.last().fill('1599');
         checks.grid_ui_edit_average_ms=Math.round((Date.now()-started)/4);
+        checks.grid_input_to_next_frame_ms=await values.first().evaluate(async input=>{
+            const start=performance.now();
+            input.value='3';
+            input.dispatchEvent(new Event('input',{bubbles:true}));
+            const handlerMs=performance.now()-start;
+            await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+            const paintMs=performance.now()-start;
+            input.value='0'; input.dispatchEvent(new Event('input',{bubbles:true}));
+            return {handler:Math.round(handlerMs),two_animation_frames:Math.round(paintMs)};
+        });
         const answerAfterEdits=await page.locator('.lcjq-block textarea').evaluate(el=>JSON.parse(el.value));
         assert.equal(answerAfterEdits.rows[0].cells.C01.value,0);
         assert.equal(answerAfterEdits.rows[39].cells.C40.value,1599);
