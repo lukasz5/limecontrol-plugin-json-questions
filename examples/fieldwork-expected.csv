@@ -1,0 +1,6 @@
+response_id,question_code,revision,path,column,type,value,comment
+1,WORK,572e3159713ef37a,"[""LODZ""]",MEASURE,multi,true,
+1,WORK,572e3159713ef37a,"[""GDYNIA""]",SERVICE,multi,true,
+1,TIME,1b8a8d89b5938517,"[""LODZ"",""MEASURE""]",HOURS,number,9,
+1,TIME,1b8a8d89b5938517,"[""GDYNIA"",""SERVICE""]",HOURS,number,0,
+1,REASON,db931e029c4606fd,"[""LODZ"",""MEASURE""]",OTHER,multi,true,Powtórzenie pomiaru

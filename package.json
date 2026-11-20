@@ -1,0 +1,7 @@
+{
+  "name": "limecontrol-json-questions-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser tests for LimeControl JSON Questions",
+  "devDependencies": {"playwright": "1.56.1"}
+}

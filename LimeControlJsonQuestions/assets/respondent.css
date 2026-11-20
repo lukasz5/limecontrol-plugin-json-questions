@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+.lcjq-block [hidden] { display: none !important; }
+.lcjq-panel { display: grid; gap: 1.25rem; }
+.lcjq-row { min-width: 0; padding: 0 .9rem .9rem; border: 1px solid var(--bs-border-color, #9ca3af); border-radius: .375rem; }
+.lcjq-row > legend { float: none; width: auto; padding: 0 .35rem; margin: 0; font-size: 1em; font-weight: 600; }
+.lcjq-cell { display: inline-block; vertical-align: top; max-width: 100%; margin: .5rem 1.25rem 0 0; }
+.lcjq-label, .lcjq-comment { display: flex; gap: .4rem; align-items: baseline; flex-wrap: wrap; }
+.lcjq-label input:not([type=checkbox]):not([type=radio]), .lcjq-comment input { flex-basis: 100%; max-width: 28rem; }
+.lcjq-label input[type=checkbox], .lcjq-label input[type=radio] { margin-inline-start: 0; flex-shrink: 0; }
+.lcjq-comment { margin-top: .5rem; }
+.lcjq-error { margin: .5rem 0 0; }
+.lcjq-required { font-size: .8em; }
+@media (max-width: 40rem) {
+    .lcjq-cell { display: block; margin-right: 0; }
+}

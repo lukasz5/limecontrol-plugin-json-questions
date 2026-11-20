@@ -1,0 +1,562 @@
+<?xml version='1.0' encoding='utf-8'?>
+<document>
+ <LimeSurveyDocType>Survey</LimeSurveyDocType>
+ <DBVersion>636</DBVersion>
+ <languages>
+  <language>pl</language>
+  <language>en</language>
+  <language>de</language>
+ </languages>
+ <groups>
+  <fields>
+   <fieldname>gid</fieldname>
+   <fieldname>sid</fieldname>
+   <fieldname>group_order</fieldname>
+   <fieldname>randomization_group</fieldname>
+   <fieldname>grelevance</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <gid>1</gid>
+    <sid>817301</sid>
+    <group_order>0</group_order>
+    <randomization_group />
+    <grelevance>1</grelevance>
+   </row>
+   <row>
+    <gid>2</gid>
+    <sid>817301</sid>
+    <group_order>1</group_order>
+    <randomization_group />
+    <grelevance>1</grelevance>
+   </row>
+   <row>
+    <gid>3</gid>
+    <sid>817301</sid>
+    <group_order>2</group_order>
+    <randomization_group />
+    <grelevance>1</grelevance>
+   </row>
+   <row>
+    <gid>4</gid>
+    <sid>817301</sid>
+    <group_order>3</group_order>
+    <randomization_group />
+    <grelevance>1</grelevance>
+   </row>
+  </rows>
+ </groups>
+ <group_l10ns>
+  <fields>
+   <fieldname>gid</fieldname>
+   <fieldname>language</fieldname>
+   <fieldname>group_name</fieldname>
+   <fieldname>description</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <gid>1</gid>
+    <language>pl</language>
+    <group_name>Wybierz lokalizacje</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>1</gid>
+    <language>en</language>
+    <group_name>Choose locations</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>1</gid>
+    <language>de</language>
+    <group_name>Standorte auswählen</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>2</gid>
+    <language>pl</language>
+    <group_name>Jakie prace wykonano?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>2</gid>
+    <language>en</language>
+    <group_name>Which tasks were performed?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>2</gid>
+    <language>de</language>
+    <group_name>Welche Arbeiten wurden durchgeführt?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>3</gid>
+    <language>pl</language>
+    <group_name>Ile godzin zajęły prace?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>3</gid>
+    <language>en</language>
+    <group_name>How many hours did each task take?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>3</gid>
+    <language>de</language>
+    <group_name>Wie viele Stunden wurden benötigt?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>4</gid>
+    <language>pl</language>
+    <group_name>Dlaczego prace trwały ponad osiem godzin?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>4</gid>
+    <language>en</language>
+    <group_name>Why did the task take more than eight hours?</group_name>
+    <description />
+   </row>
+   <row>
+    <gid>4</gid>
+    <language>de</language>
+    <group_name>Warum dauerte die Arbeit über acht Stunden?</group_name>
+    <description />
+   </row>
+  </rows>
+ </group_l10ns>
+ <questions>
+  <fields>
+   <fieldname>qid</fieldname>
+   <fieldname>parent_qid</fieldname>
+   <fieldname>sid</fieldname>
+   <fieldname>gid</fieldname>
+   <fieldname>type</fieldname>
+   <fieldname>title</fieldname>
+   <fieldname>preg</fieldname>
+   <fieldname>other</fieldname>
+   <fieldname>mandatory</fieldname>
+   <fieldname>encrypted</fieldname>
+   <fieldname>question_order</fieldname>
+   <fieldname>scale_id</fieldname>
+   <fieldname>same_default</fieldname>
+   <fieldname>relevance</fieldname>
+   <fieldname>question_theme_name</fieldname>
+   <fieldname>modulename</fieldname>
+   <fieldname>same_script</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <qid>100</qid>
+    <parent_qid>0</parent_qid>
+    <sid>817301</sid>
+    <gid>1</gid>
+    <type>M</type>
+    <title>CITIES</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>0</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name />
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+   <row>
+    <qid>200</qid>
+    <parent_qid>0</parent_qid>
+    <sid>817301</sid>
+    <gid>2</gid>
+    <type>U</type>
+    <title>WORK</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>0</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name>LcJsonChoice</question_theme_name>
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+   <row>
+    <qid>300</qid>
+    <parent_qid>0</parent_qid>
+    <sid>817301</sid>
+    <gid>3</gid>
+    <type>U</type>
+    <title>TIME</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>0</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name>LcJsonMatrix</question_theme_name>
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+   <row>
+    <qid>400</qid>
+    <parent_qid>0</parent_qid>
+    <sid>817301</sid>
+    <gid>4</gid>
+    <type>U</type>
+    <title>REASON</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>0</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name>LcJsonFollowup</question_theme_name>
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+  </rows>
+ </questions>
+ <subquestions>
+  <fields>
+   <fieldname>qid</fieldname>
+   <fieldname>parent_qid</fieldname>
+   <fieldname>sid</fieldname>
+   <fieldname>gid</fieldname>
+   <fieldname>type</fieldname>
+   <fieldname>title</fieldname>
+   <fieldname>preg</fieldname>
+   <fieldname>other</fieldname>
+   <fieldname>mandatory</fieldname>
+   <fieldname>encrypted</fieldname>
+   <fieldname>question_order</fieldname>
+   <fieldname>scale_id</fieldname>
+   <fieldname>same_default</fieldname>
+   <fieldname>relevance</fieldname>
+   <fieldname>question_theme_name</fieldname>
+   <fieldname>modulename</fieldname>
+   <fieldname>same_script</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <qid>101</qid>
+    <parent_qid>100</parent_qid>
+    <sid>817301</sid>
+    <gid>1</gid>
+    <type>T</type>
+    <title>LODZ</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>0</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name />
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+   <row>
+    <qid>102</qid>
+    <parent_qid>100</parent_qid>
+    <sid>817301</sid>
+    <gid>1</gid>
+    <type>T</type>
+    <title>GDYNIA</title>
+    <preg />
+    <other>N</other>
+    <mandatory>N</mandatory>
+    <encrypted>N</encrypted>
+    <question_order>1</question_order>
+    <scale_id>0</scale_id>
+    <same_default>0</same_default>
+    <relevance>1</relevance>
+    <question_theme_name />
+    <modulename />
+    <same_script>0</same_script>
+   </row>
+  </rows>
+ </subquestions>
+ <question_l10ns>
+  <fields>
+   <fieldname>qid</fieldname>
+   <fieldname>language</fieldname>
+   <fieldname>question</fieldname>
+   <fieldname>help</fieldname>
+   <fieldname>script</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <qid>100</qid>
+    <language>pl</language>
+    <question>Wybierz lokalizacje</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>100</qid>
+    <language>en</language>
+    <question>Choose locations</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>100</qid>
+    <language>de</language>
+    <question>Standorte auswählen</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>101</qid>
+    <language>pl</language>
+    <question>Łódź</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>101</qid>
+    <language>en</language>
+    <question>Łódź</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>101</qid>
+    <language>de</language>
+    <question>Łódź</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>102</qid>
+    <language>pl</language>
+    <question>Gdynia</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>102</qid>
+    <language>en</language>
+    <question>Gdynia</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>102</qid>
+    <language>de</language>
+    <question>Gdynia</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>200</qid>
+    <language>pl</language>
+    <question>Jakie prace wykonano?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>200</qid>
+    <language>en</language>
+    <question>Which tasks were performed?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>200</qid>
+    <language>de</language>
+    <question>Welche Arbeiten wurden durchgeführt?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>300</qid>
+    <language>pl</language>
+    <question>Ile godzin zajęły prace?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>300</qid>
+    <language>en</language>
+    <question>How many hours did each task take?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>300</qid>
+    <language>de</language>
+    <question>Wie viele Stunden wurden benötigt?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>400</qid>
+    <language>pl</language>
+    <question>Dlaczego prace trwały ponad osiem godzin?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>400</qid>
+    <language>en</language>
+    <question>Why did the task take more than eight hours?</question>
+    <help />
+    <script />
+   </row>
+   <row>
+    <qid>400</qid>
+    <language>de</language>
+    <question>Warum dauerte die Arbeit über acht Stunden?</question>
+    <help />
+    <script />
+   </row>
+  </rows>
+ </question_l10ns>
+ <question_attributes>
+  <fields>
+   <fieldname>qid</fieldname>
+   <fieldname>attribute</fieldname>
+   <fieldname>value</fieldname>
+   <fieldname>language</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <qid>200</qid>
+    <attribute>lcjq_definition</attribute>
+    <value>{"version":1,"kind":"choice","source":"CITIES","options":[{"code":"MEASURE","type":"multi","label":{"pl":"Pomiar","en":"Measurement","de":"Messung"}},{"code":"SERVICE","type":"multi","label":{"pl":"Serwis","en":"Service","de":"Wartung"}}],"rules":[],"revision":"572e3159713ef37a"}</value>
+    <language />
+   </row>
+   <row>
+    <qid>200</qid>
+    <attribute>em_validation_q</attribute>
+    <value>lcjqValid(this.NAOK, "WORK", SID)</value>
+    <language />
+   </row>
+   <row>
+    <qid>300</qid>
+    <attribute>lcjq_definition</attribute>
+    <value>{"version":1,"kind":"matrix","source":"WORK","options":[{"code":"HOURS","type":"number","label":{"pl":"Liczba godzin","en":"Hours","de":"Stunden"},"required":true}],"rules":[],"revision":"1b8a8d89b5938517"}</value>
+    <language />
+   </row>
+   <row>
+    <qid>300</qid>
+    <attribute>em_validation_q</attribute>
+    <value>lcjqValid(this.NAOK, "TIME", SID)</value>
+    <language />
+   </row>
+   <row>
+    <qid>400</qid>
+    <attribute>lcjq_definition</attribute>
+    <value>{"version":1,"kind":"followup","source":"TIME","options":[{"code":"OTHER","type":"multi","label":{"pl":"Inne","en":"Other","de":"Sonstiges"},"comment":true}],"rules":[{"effect":"show","target":"*","when":{"field":"source.HOURS","op":"gt","value":8}}],"revision":"db931e029c4606fd"}</value>
+    <language />
+   </row>
+   <row>
+    <qid>400</qid>
+    <attribute>em_validation_q</attribute>
+    <value>lcjqValid(this.NAOK, "REASON", SID)</value>
+    <language />
+   </row>
+  </rows>
+ </question_attributes>
+ <surveys>
+  <fields>
+   <fieldname>sid</fieldname>
+   <fieldname>gsid</fieldname>
+   <fieldname>admin</fieldname>
+   <fieldname>adminemail</fieldname>
+   <fieldname>anonymized</fieldname>
+   <fieldname>format</fieldname>
+   <fieldname>template</fieldname>
+   <fieldname>language</fieldname>
+   <fieldname>additional_languages</fieldname>
+   <fieldname>allowsave</fieldname>
+   <fieldname>allowprev</fieldname>
+   <fieldname>showwelcome</fieldname>
+   <fieldname>showgroupinfo</fieldname>
+   <fieldname>showxquestions</fieldname>
+   <fieldname>showqnumcode</fieldname>
+   <fieldname>showprogress</fieldname>
+   <fieldname>active</fieldname>
+   <fieldname>listpublic</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <sid>817301</sid>
+    <gsid>1</gsid>
+    <admin />
+    <adminemail />
+    <anonymized>Y</anonymized>
+    <format>G</format>
+    <template>fruity_twentythree</template>
+    <language>pl</language>
+    <additional_languages>en de</additional_languages>
+    <allowsave>Y</allowsave>
+    <allowprev>Y</allowprev>
+    <showwelcome>N</showwelcome>
+    <showgroupinfo>X</showgroupinfo>
+    <showxquestions>N</showxquestions>
+    <showqnumcode>X</showqnumcode>
+    <showprogress>Y</showprogress>
+    <active>N</active>
+    <listpublic>N</listpublic>
+   </row>
+  </rows>
+ </surveys>
+ <surveys_languagesettings>
+  <fields>
+   <fieldname>surveyls_survey_id</fieldname>
+   <fieldname>surveyls_language</fieldname>
+   <fieldname>surveyls_title</fieldname>
+   <fieldname>surveyls_description</fieldname>
+   <fieldname>surveyls_welcometext</fieldname>
+   <fieldname>surveyls_endtext</fieldname>
+   <fieldname>surveyls_dateformat</fieldname>
+   <fieldname>surveyls_numberformat</fieldname>
+  </fields>
+  <rows>
+   <row>
+    <surveyls_survey_id>817301</surveyls_survey_id>
+    <surveyls_language>pl</surveyls_language>
+    <surveyls_title>Prace terenowe</surveyls_title>
+    <surveyls_description />
+    <surveyls_welcometext />
+    <surveyls_endtext>Dziękujemy.</surveyls_endtext>
+    <surveyls_dateformat>1</surveyls_dateformat>
+    <surveyls_numberformat>0</surveyls_numberformat>
+   </row>
+   <row>
+    <surveyls_survey_id>817301</surveyls_survey_id>
+    <surveyls_language>en</surveyls_language>
+    <surveyls_title>Fieldwork</surveyls_title>
+    <surveyls_description />
+    <surveyls_welcometext />
+    <surveyls_endtext>Thank you.</surveyls_endtext>
+    <surveyls_dateformat>1</surveyls_dateformat>
+    <surveyls_numberformat>0</surveyls_numberformat>
+   </row>
+   <row>
+    <surveyls_survey_id>817301</surveyls_survey_id>
+    <surveyls_language>de</surveyls_language>
+    <surveyls_title>Feldarbeit</surveyls_title>
+    <surveyls_description />
+    <surveyls_welcometext />
+    <surveyls_endtext>Vielen Dank.</surveyls_endtext>
+    <surveyls_dateformat>1</surveyls_dateformat>
+    <surveyls_numberformat>0</surveyls_numberformat>
+   </row>
+  </rows>
+ </surveys_languagesettings>
+</document>

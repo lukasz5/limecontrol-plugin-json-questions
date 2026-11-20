@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Structure based on the LimeSurvey U core question manifest, LimeSurvey GmbH.
+     SPDX-License-Identifier: GPL-2.0-or-later -->
+<config>
+    <metadata>
+        <name>LcJsonMatrix</name>
+        <type>question_theme</type>
+        <title>Table from earlier answers</title>
+        <creationDate>2026-11-20</creationDate>
+        <author>LimeControl</author>
+        <authorUrl>https://limecontrol.eu</authorUrl>
+        <copyright>Copyright 2026 LimeControl</copyright>
+        <license>GNU General Public License version 2 or later</license>
+        <version>0.1.0</version>
+        <apiVersion>1</apiVersion>
+        <description>Collect values in configurable columns for each previously selected item. Requires the LimeControlJsonQuestions plugin.</description>
+        <questionType>U</questionType>
+        <group>Text questions</group>
+        <subquestions>0</subquestions>
+        <answerscales>0</answerscales>
+        <hasdefaultvalues>1</hasdefaultvalues>
+        <assessable>0</assessable>
+        <class>text-huge</class>
+    </metadata>
+    <compatibility>
+        <version>6.0</version>
+        <version>7.0</version>
+    </compatibility>
+    <engine>
+        <load_core_css>true</load_core_css>
+        <load_core_js>true</load_core_js>
+        <show_as_template>true</show_as_template>
+        <show_as_question_type>true</show_as_question_type>
+    </engine>
+</config>

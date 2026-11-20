@@ -1,0 +1,64 @@
+name: Verify installable archives
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        ls: ['6.15.12', '6.17.19', '7.11.0']
+        engine: [mysql, postgres]
+    name: LS ${{ matrix.ls }} / ${{ matrix.engine }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: '${{ inputs.artifact }}', path: dist}
+      - run: python3 scripts/package.py --verify
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, pdo_pgsql, gd, intl, mbstring, zip, dom, sodium, ldap, imap
+          coverage: none
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci && npx playwright install --with-deps chromium
+      - name: Start disposable database
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          docker compose -p lcjq_it -f docker/compose.yaml up -d "$ENGINE"
+          for i in {1..60}; do
+            if [ "$ENGINE" = mysql ]; then
+              docker compose -p lcjq_it -f docker/compose.yaml exec -T mysql mysqladmin ping --protocol=TCP --silent && exit 0
+            else
+              docker compose -p lcjq_it -f docker/compose.yaml exec -T postgres pg_isready -U postgres && exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Install, activate, run survey and verify export
+        env:
+          EDITION: ${{ matrix.ls }}
+          ENGINE: ${{ matrix.engine }}
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/node_modules/playwright
+        run: |
+          inner=3306
+          if [ "$ENGINE" = postgres ]; then inner=5432; fi
+          mapped=$(docker compose -p lcjq_it -f docker/compose.yaml port "$ENGINE" "$inner")
+          python3 tests/integration/run.py --version "$EDITION" --engine "$ENGINE" --db-port "${mapped##*:}" --dist dist --report "$RUNNER_TEMP/qualification.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qualification-${{ matrix.ls }}-${{ matrix.engine }}
+          path: ${{ runner.temp }}/qualification.json
+          if-no-files-found: error
+      - name: Clean up
+        if: always()
+        run: docker compose -p lcjq_it -f docker/compose.yaml down -v

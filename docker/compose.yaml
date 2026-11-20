@@ -1,0 +1,15 @@
+# Synthetic, disposable engines for integration tests. No host volumes.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: lcjq-synthetic-test
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: lcjq
+    ports: ["127.0.0.1::3306"]
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_PASSWORD: lcjq-synthetic-test
+      POSTGRES_DB: lcjq
+    ports: ["127.0.0.1::5432"]
