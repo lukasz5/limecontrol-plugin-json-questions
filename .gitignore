@@ -1,0 +1,7 @@
+/dist/
+/vendor/
+/node_modules/
+/.phpstan.cache/
+/.DS_Store
+/test-results/
+/playwright-report/
