@@ -60,7 +60,7 @@ jobs:
           if [ "$ENGINE" = postgres ]; then inner=5432; fi
           mapped=$(docker compose -p lcjq_it -f docker/compose.yaml port "$ENGINE" "$inner")
           python3 tests/integration/run.py --version "$EDITION" --engine "$ENGINE" --db-port "${mapped##*:}" --dist dist --report "$RUNNER_TEMP/qualification.json"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: qualification-${{ matrix.ls }}-${{ matrix.engine }}-${{ matrix.php }}
           path: ${{ runner.temp }}/qualification.json

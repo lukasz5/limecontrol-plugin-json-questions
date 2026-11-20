@@ -28,7 +28,7 @@ jobs:
           gh release download "$GITHUB_REF_NAME" --dir draft-assets
           python3 scripts/package.py --tag "$GITHUB_REF_NAME" --verify --output draft-assets
           diff dist/SHA256SUMS draft-assets/SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: {name: release-from-github, path: draft-assets, if-no-files-found: error}
   acceptance:
     needs: draft
