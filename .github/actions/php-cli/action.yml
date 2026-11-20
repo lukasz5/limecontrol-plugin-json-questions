@@ -1,0 +1,61 @@
+name: Set up verified PHP CLI
+description: Run the official PHP CLI in a container on the Linux runner
+inputs:
+  version:
+    description: A pinned PHP version or the 8.3 test line
+    required: true
+  limesurvey:
+    description: Build and check the extensions for the native survey runtime
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        WANTED_PHP: ${{ inputs.version }}
+        WITH_LS: ${{ inputs.limesurvey }}
+      run: |
+        set -euo pipefail
+        case "$WANTED_PHP" in
+          8.1.29) image='php:8.1.29-cli-bookworm@sha256:dc559cfbf5b6b95031362466e01bb6ed8015bb029ada26b27a784a678e863c9f' ;;
+          8.2.27) image='php:8.2.27-cli-bookworm@sha256:d89aa6c05fc8ce45dd4c21283413471ecb15b2a972b5959d3ecba7eac4ce5b8f' ;;
+          8.3)    image='php:8.3-cli-bookworm@sha256:f1ef73e865793418aac8cf6d8dbb44b33b527cdac62dbcf2e47061ed8f40b81a' ;;
+          *) echo "Unsupported PHP version $WANTED_PHP" >&2; exit 1 ;;
+        esac
+        docker pull "$image"
+        actual=$(docker run --rm "$image" php -r 'echo PHP_VERSION;')
+        if [[ "$actual" != "$WANTED_PHP" && ! ( "$WANTED_PHP" == 8.3 && "$actual" == 8.3.* ) ]]; then
+          echo "Expected PHP $WANTED_PHP, received $actual" >&2
+          exit 1
+        fi
+        if [[ "$WITH_LS" == true ]]; then
+          docker build --build-arg "BASE_IMAGE=$image" --tag "lcjq-php:$actual" "$GITHUB_ACTION_PATH"
+          image="lcjq-php:$actual"
+        fi
+        mkdir -p "$RUNNER_TEMP/lcjq-php-bin" "$RUNNER_TEMP/lcjq-work"
+        install -m 0755 "$GITHUB_ACTION_PATH/php" "$RUNNER_TEMP/lcjq-php-bin/php"
+        echo "$RUNNER_TEMP/lcjq-php-bin" >> "$GITHUB_PATH"
+        echo "LCJQ_PHP_IMAGE=$image" >> "$GITHUB_ENV"
+        echo "TMPDIR=$RUNNER_TEMP/lcjq-work" >> "$GITHUB_ENV"
+        echo "Using official PHP $actual for requested $WANTED_PHP."
+    - shell: bash
+      env:
+        WANTED_PHP: ${{ inputs.version }}
+        WITH_LS: ${{ inputs.limesurvey }}
+      run: |
+        php -r '
+          $wanted = $argv[1];
+          if ($wanted === "8.3" ? PHP_MAJOR_VERSION !== 8 || PHP_MINOR_VERSION !== 3 : PHP_VERSION !== $wanted) {
+              fwrite(STDERR, "Unexpected PHP " . PHP_VERSION . " (wanted $wanted)\n");
+              exit(1);
+          }
+          if ($argv[2] === "true") {
+              foreach (explode(",", "pdo_mysql,pdo_pgsql,gd,intl,mbstring,zip,dom,sodium,ldap,imap,curl,SimpleXML,session,xmlreader,xmlwriter,iconv,fileinfo,openssl") as $extension) {
+                  if (!extension_loaded($extension)) {
+                      fwrite(STDERR, "Missing PHP extension: $extension\n");
+                      exit(1);
+                  }
+              }
+          }
+          echo "Verified CLI: PHP ", PHP_VERSION, " (", PHP_SAPI, ")\n";
+        ' "$WANTED_PHP" "$WITH_LS"

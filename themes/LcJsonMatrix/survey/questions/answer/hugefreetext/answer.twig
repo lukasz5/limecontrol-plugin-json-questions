@@ -1,0 +1,13 @@
+{# Based on LimeSurvey's hugefreetext/answer.twig, LimeSurvey GmbH.
+   SPDX-License-Identifier: GPL-2.0-or-later
+   do_hugefreetext passes the HTML-escaped saved answer as dispVal. #}
+<div class="{{ coreClass }} answer-item">
+    <textarea class="lcjq-storage form-control {{ kpclass }}" id="answer{{ name }}"
+              name="{{ name }}" aria-labelledby="ls-question-text-{{ basename }}"
+              hidden>{{ dispVal }}</textarea>
+    <p class="lcjq-fallback" role="status">
+        <span lang="en">This question requires the LimeControl JSON Questions plugin and JavaScript.</span>
+        <span lang="pl">To pytanie wymaga wtyczki LimeControl JSON Questions i JavaScriptu.</span>
+        <span lang="de">Diese Frage benötigt das Plugin LimeControl JSON Questions und JavaScript.</span>
+    </p>
+</div>

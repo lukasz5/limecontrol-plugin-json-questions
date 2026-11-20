@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Keep the native test runner and browser on the host; its private work tree has
+# the same path in CLI and HTTP invocations of the verified PHP distribution.
+set -euo pipefail
+exec docker run --rm --init --interactive --network host \
+  --user "$(id -u):$(id -g)" --workdir "$PWD" \
+  --mount "type=bind,src=$GITHUB_WORKSPACE,dst=$GITHUB_WORKSPACE" \
+  --mount "type=bind,src=$TMPDIR,dst=$TMPDIR" \
+  --env TMPDIR --env LCJQ_DSN --env LCJQ_DB_USER --env LCJQ_TABLE_PREFIX \
+  --env YII_CONSOLE_COMMANDS --env LCJQ_ROLE_RUN --env LCJQ_ROLE_PASSWORD \
+  "$LCJQ_PHP_IMAGE" php "$@"

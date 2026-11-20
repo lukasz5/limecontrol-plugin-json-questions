@@ -1,0 +1,154 @@
+{
+  "date": "2026-11-20",
+  "scope": "Local clean LimeSurvey CE installations with native upload, respondent Chromium, MySQL and PostgreSQL. All survey data were synthetic.",
+  "archives": {
+    "LcJsonChoice-0.1.0.zip": "e8c3d63a525fb3d9ae8f6e61b938aef45e62bb84149a8458ec87dd9855324130",
+    "LcJsonFollowup-0.1.0.zip": "81d778f2c5d2b57d2c8e3ef9206d52566a2e82b97df7e8420b629b0a4d04a4ab",
+    "LcJsonMatrix-0.1.0.zip": "3985174e496de435f04af1e6549f0007a2c86c4c474c85b95248b998369890bc",
+    "LimeControlJsonQuestions-0.1.0.zip": "5395109f5fce80a2f0aba36ede56b4292ae87899a328a29734d76d9f6bc7c4fe"
+  },
+  "upstream": {
+    "6.15.12": {
+      "url": "https://codeload.github.com/LimeSurvey/LimeSurvey/tar.gz/refs/tags/6.15.12+250916",
+      "sha256": "809818bb64269691e209870c6e89feef35ef4ee9871fa9f70f4610d20a18a174"
+    },
+    "6.17.19": {
+      "url": "https://codeload.github.com/LimeSurvey/LimeSurvey/tar.gz/a4a39361bd5ca1afefb85b4726d9d179ae4bad7c",
+      "sha256": "2f33d1d3f7a2ca2a0910ae7abd017838850949d7f0606c89ee885adfa6797c31"
+    },
+    "7.11.0": {
+      "url": "https://download.limesurvey.org/latest-master/limesurvey7.11.0+261116.zip",
+      "sha256": "cf2df8f0269bfdf9aab10ee4da83b7e259ca3dc854da89ba570669f3c0d9985f"
+    }
+  },
+  "checks": [
+    "Native administrator ZIP upload, confirmation, activation and update for the plugin; native question-theme ZIP uploads and updates",
+    "Author configuration of three initially blank U blocks and preview; active example import, native survey completion, export and codebook",
+    "Previous page, removal of a source city, inactive branch removal, two languages, keyboard at mobile width, anonymous save/resume using a new browser session",
+    "40 x 40 data supplied via the native form field. Fresh-session UI readback of every number, editing first and last cells, native save and equality of all 1600 exported values",
+    "Guest, author and exporter survey ACLs including access to a different survey",
+    "Backup, detach and restore, metadata purge, all blocks on one native page",
+    "Real global deactivation refused with dependent active formulas and permitted after detaching. Saved response rows byte-equivalent after deactivation, then plugin reactivated."
+  ],
+  "notes": [
+    "LimeSurvey 6 source archives are pinned to the upstream release revisions; the revisions leave the runtime build number empty.",
+    "Four automated edits include Playwright actionability and scheduling; two animation frames include rendering and host load. Six combinations were exercised concurrently. Timings are observations from this local run.",
+    "Each configuration used a fresh isolated database and exercised native global deactivation and reactivation in the same run. One test on 6.15.12 / MySQL initially sampled the UI before asynchronous mounting finished and was repeated in full using a visible-row wait."
+  ],
+  "configurations": [
+    {
+      "edition": "6.15.12",
+      "build": null,
+      "php": "8.3.28",
+      "engine": "mysql",
+      "database": "8.4.13",
+      "control_columns": 47,
+      "with_block_columns": 48,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 65535,
+      "grid_edit_automation_ms": 399,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 343
+      },
+      "persisted_records_checked": 2
+    },
+    {
+      "edition": "6.15.12",
+      "build": null,
+      "php": "8.3.28",
+      "engine": "postgres",
+      "database": "PostgreSQL 17.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "control_columns": 47,
+      "with_block_columns": 48,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 2097152,
+      "grid_edit_automation_ms": 410,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 366
+      },
+      "persisted_records_checked": 2
+    },
+    {
+      "edition": "6.17.19",
+      "build": null,
+      "php": "8.3.28",
+      "engine": "mysql",
+      "database": "8.4.13",
+      "control_columns": 47,
+      "with_block_columns": 48,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 65535,
+      "grid_edit_automation_ms": 413,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 377
+      },
+      "persisted_records_checked": 2
+    },
+    {
+      "edition": "6.17.19",
+      "build": null,
+      "php": "8.3.28",
+      "engine": "postgres",
+      "database": "PostgreSQL 17.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "control_columns": 47,
+      "with_block_columns": 48,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 2097152,
+      "grid_edit_automation_ms": 416,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 372
+      },
+      "persisted_records_checked": 2
+    },
+    {
+      "edition": "7.11.0",
+      "build": 261116,
+      "php": "8.3.28",
+      "engine": "mysql",
+      "database": "8.4.13",
+      "control_columns": 48,
+      "with_block_columns": 49,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 65535,
+      "grid_edit_automation_ms": 410,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 368
+      },
+      "persisted_records_checked": 2
+    },
+    {
+      "edition": "7.11.0",
+      "build": 261116,
+      "php": "8.3.28",
+      "engine": "postgres",
+      "database": "PostgreSQL 17.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "control_columns": 48,
+      "with_block_columns": 49,
+      "grid_payload_bytes": 33622,
+      "grid_restored_cells": 1600,
+      "verified_csv_cells": 1600,
+      "max_answer_bytes": 2097152,
+      "grid_edit_automation_ms": 415,
+      "grid_edit_timing_ms": {
+        "handler": 1,
+        "two_animation_frames": 403
+      },
+      "persisted_records_checked": 2
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+name: Verify installable archives
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        ls: ['6.15.12', '6.17.19', '7.11.0']
+        engine: [mysql, postgres]
+        php: ['8.3']
+        include:
+          - {ls: '6.15.12', engine: mysql, php: '8.1.29'}
+          - {ls: '7.11.0', engine: postgres, php: '8.2.27'}
+    name: LS ${{ matrix.ls }} / ${{ matrix.engine }} / PHP ${{ matrix.php }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: '${{ inputs.artifact }}', path: dist}
+      - run: python3 scripts/package.py --verify
+      - uses: ./.github/actions/php-cli
+        with:
+          version: '${{ matrix.php }}'
+          limesurvey: 'true'
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Verify the hosted runner browser
+        run: /usr/bin/google-chrome --version
+      - name: Start disposable database
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          docker compose -p lcjq_it -f docker/compose.yaml up -d "$ENGINE"
+          for i in {1..60}; do
+            if [ "$ENGINE" = mysql ]; then
+              docker compose -p lcjq_it -f docker/compose.yaml exec -T mysql mysqladmin ping --protocol=TCP --silent && exit 0
+            else
+              docker compose -p lcjq_it -f docker/compose.yaml exec -T postgres pg_isready -U postgres && exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Install, activate, run survey and verify export
+        env:
+          EDITION: ${{ matrix.ls }}
+          ENGINE: ${{ matrix.engine }}
+          CHROMIUM_PATH: /usr/bin/google-chrome
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/node_modules/playwright
+        run: |
+          inner=3306
+          if [ "$ENGINE" = postgres ]; then inner=5432; fi
+          mapped=$(docker compose -p lcjq_it -f docker/compose.yaml port "$ENGINE" "$inner")
+          python3 tests/integration/run.py --version "$EDITION" --engine "$ENGINE" --db-port "${mapped##*:}" --dist dist --report "$RUNNER_TEMP/qualification.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qualification-${{ matrix.ls }}-${{ matrix.engine }}-${{ matrix.php }}
+          path: ${{ runner.temp }}/qualification.json
+          if-no-files-found: error
+      - name: Clean up
+        if: always()
+        run: docker compose -p lcjq_it -f docker/compose.yaml down -v

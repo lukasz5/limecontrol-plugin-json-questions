@@ -1,0 +1,51 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions: {contents: read}
+concurrency: release-${{ github.ref }}
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Verify tag and package
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          python3 scripts/package.py --tag "$GITHUB_REF_NAME"
+          python3 scripts/package.py --tag "$GITHUB_REF_NAME" --verify
+      - name: Create draft and fetch the attached archives for acceptance
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          python3 scripts/release_notes.py "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes"
+          if gh release view "$GITHUB_REF_NAME" --json isDraft > "$RUNNER_TEMP/release-state"; then
+            jq -e .isDraft "$RUNNER_TEMP/release-state"
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes"
+          fi
+          gh release download "$GITHUB_REF_NAME" --dir draft-assets
+          python3 scripts/package.py --tag "$GITHUB_REF_NAME" --verify --output draft-assets
+          diff dist/SHA256SUMS draft-assets/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with: {name: release-from-github, path: draft-assets, if-no-files-found: error}
+  acceptance:
+    needs: draft
+    uses: ./.github/workflows/qualify.yml
+    with: {artifact: release-from-github}
+  publish:
+    needs: acceptance
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'qualification-*', path: reports}
+      - uses: actions/download-artifact@v4
+        with: {name: release-from-github, path: archives}
+      - run: python3 scripts/qualification.py reports archives qualification.json
+      - env: {GH_TOKEN: '${{ github.token }}', REPO: '${{ github.repository }}'}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" --repo "$REPO" qualification.json --clobber
+          gh release edit "$GITHUB_REF_NAME" --repo "$REPO" --draft=false --latest
