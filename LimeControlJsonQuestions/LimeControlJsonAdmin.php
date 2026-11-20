@@ -75,7 +75,8 @@ final class LimeControlJsonAdmin
             throw new CHttpException(404);
         }
         $editing = $action === 'editor';
-        if (App()->user->isGuest || !Permission::model()->hasSurveyPermission($sid,
+        if (App()->user->isGuest || (!$editing && !Permission::model()->hasSurveyPermission($sid,'responses','read'))
+            || !Permission::model()->hasSurveyPermission($sid,
             $editing ? 'surveycontent' : 'responses', $editing ? 'update' : 'export')) {
             throw new CHttpException(403);
         }
@@ -149,8 +150,8 @@ final class LimeControlJsonAdmin
             }
             $def['revision'] = substr(hash('sha256', self::json($def)), 0, 16);
             $history = json_decode($ctx->attribute($qid, LimeControlJsonContext::HISTORY), true) ?: [];
-            if (!empty($old['revision'])) {
-                $history[$old['revision']] = $old;
+            if ($old) {
+                $history[$old['revision'] ?? '_initial'] = $old;
             }
             $eq = LimeControlJsonContext::equation($code);
             $existing = trim($ctx->attribute($qid, 'em_validation_q'));
@@ -297,7 +298,7 @@ final class LimeControlJsonAdmin
                 // Include native upstream answers for relevance; only allowlisted JSON columns are emitted.
                 $responses = Response::model($sid)->findAll($criteria);
                 foreach ($responses as $response) {
-                    $last = (int)$response->id;
+                    $last = (int)$response->getPrimaryKey();
                     $response->decrypt();
                     foreach ($blocks as $code => $field) {
                         $raw = $response->getAttribute($field);
@@ -321,7 +322,7 @@ final class LimeControlJsonAdmin
                             continue;
                         }
                         $rev = $answer['revision'] ?? '';
-                        $definition = $ctx->definition($code, $rev);
+                        $definition = $ctx->responseDefinition($code, $answer);
                         if (!$definition || ($answer['version'] ?? null) !== 1) {
                             throw new CHttpException(422, self::message('invalid') . ' ' . $code);
                         }

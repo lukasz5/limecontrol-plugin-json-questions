@@ -350,15 +350,15 @@
     const encodedBytes = value => new TextEncoder().encode(value).length;
 
     function validatePayload(def, sources, raw, maxBytes = DEFAULT_BYTES) {
-        const answer = readAnswer(raw);
         if (typeof raw === 'string' && encodedBytes(raw) > maxBytes) return false;
+        const answer = readAnswer(raw);
         if (raw && def.revision !== undefined && answer.revision !== def.revision) return false;
         const options = new Map(def.options.map(option => [option.code, option]));
         const sourceMap = new Map(sources.map(row => [keyOf(row.path), row]));
         if (answer.rows.length > 10000) return false;
         for (const row of answer.rows) {
             const source = sourceMap.get(keyOf(row.path));
-            if (!source || !row.path.length || row.path.length > 32) return false;
+            if (!source || !row.path.length || row.path.length > 32 || row.path.some(code => !code || encodedBytes(code) > 128)) return false;
             const policy = rowPolicy(def, source, row.cells, sources.length);
             if (!policy.shown('*') && Object.keys(row.cells).length) return false;
             let single = 0;

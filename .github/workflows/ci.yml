@@ -28,7 +28,7 @@ jobs:
       - if: matrix.php == '8.3'
         run: composer install --no-interaction --prefer-dist && python3 scripts/analyse.py upstream
   bundle:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,7 +36,7 @@ jobs:
       - run: npm ci && npx playwright install --with-deps chromium
       - run: python3 scripts/package.py && python3 scripts/package.py --verify
       - run: unzip -q dist/LimeControlJsonQuestions-*.zip -d "$RUNNER_TEMP/lcjq-zip"
-      - run: node tests/respondent.browser.cjs
+      - run: node tests/respondent.browser.cjs && node tests/respondent.parity.cjs
         env:
           LCJQ_ASSETS: ${{ runner.temp }}/lcjq-zip/LimeControlJsonQuestions/assets
       - uses: actions/upload-artifact@v4

@@ -50,13 +50,17 @@ class LimeControlJsonQuestions extends PluginBase
             return false;
         }
         $values = $ctx->currentValues();
-        $previous = self::decode($values[$ctx->fieldName($code)] ?? '');
+        $field = $ctx->fieldName($code);
+        $previous = self::decode($values[$field] ?? '');
+        // ExpressionScript escapes braces and ampersands in text values (.NAOK). Restore exactly one escaping layer.
         $answer = self::decode($raw);
+        if ($answer === null && is_string($raw)) {
+            $answer = self::decode(html_entity_decode($raw, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
         if ($answer === null) {
             return false;
         }
-        $revision = $answer['revision'] ?? ($previous['revision'] ?? null);
-        $definition = $ctx->definition($code, $revision);
+        $definition = $ctx->responseDefinition($code, !empty($answer['rows']) ? $answer : ($previous ?: $answer));
         if (!$definition) {
             return false;
         }
@@ -111,7 +115,7 @@ class LimeControlJsonQuestions extends PluginBase
             }
             $values = $ctx->currentValues();
             $old = self::decode($values[$name] ?? null);
-            $definition = $ctx->definition($code, $old['revision'] ?? null);
+            $definition = $ctx->responseDefinition($code, $old ?: []);
             if (!$definition || isset($answer['revision']) && ($definition['revision'] ?? null) !== $answer['revision']) {
                 throw new CHttpException(422, LimeControlJsonAdmin::message('invalid') . ' (' . $code . ')');
             }
@@ -155,7 +159,7 @@ class LimeControlJsonQuestions extends PluginBase
         $name = $ctx->fieldName($code);
         $values = $ctx->currentValues();
         $old = self::decode($values[$name] ?? '');
-        $definition = $ctx->definition($code, $old['revision'] ?? null);
+        $definition = $ctx->responseDefinition($code, $old ?: []);
         if (!$definition || $ctx->definitionErrors($code, $definition)) {
             $event->set('answers', CHtml::tag('p', ['role'=>'alert'], CHtml::encode(LimeControlJsonAdmin::message('invalid'))));
             return;
@@ -212,7 +216,8 @@ class LimeControlJsonQuestions extends PluginBase
         }
         $items = $event->get('menuItems') ?: [];
         foreach (['editor'=>['surveycontent','update'], 'export'=>['responses','export'], 'dictionary'=>['responses','export'], 'legacy'=>['responses','export']] as $action=>$permission) {
-            if (Permission::model()->hasSurveyPermission($sid, $permission[0], $permission[1])) {
+            if (Permission::model()->hasSurveyPermission($sid, $permission[0], $permission[1])
+                && ($action === 'editor' || Permission::model()->hasSurveyPermission($sid,'responses','read'))) {
                 $items[] = new \LimeSurvey\Menu\MenuItem(['label'=>LimeControlJsonAdmin::message($action),
                     'href'=>CHtml::encode(LimeControlJsonAdmin::url($action, $sid))]);
             }

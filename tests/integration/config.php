@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: GPL-2.0-or-later
 // Only copied into a newly extracted LimeSurvey tree by the test runner.
 return [
     'components' => [

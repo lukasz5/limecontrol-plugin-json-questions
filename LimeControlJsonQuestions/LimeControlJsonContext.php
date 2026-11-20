@@ -73,6 +73,24 @@ final class LimeControlJsonContext
         return $history[$revision] ?? [];
     }
 
+    public function responseDefinition($code, array $answer)
+    {
+        $qid = (int)($this->questions[$code]['qid'] ?? 0);
+        if (!$qid) { return []; }
+        $revision = $answer['revision'] ?? null;
+        if ($revision !== null && !is_string($revision)) { return []; }
+        $current = $this->definition($code);
+        $detached = json_decode($this->attribute($qid, self::DETACHED), true) ?: [];
+        $history = json_decode($this->attribute($qid, self::HISTORY), true) ?: [];
+        if (!$revision) {
+            return ($answer['rows'] ?? []) && isset($history['_initial']) ? $history['_initial'] : ($current ?: $detached);
+        }
+        foreach ([$current, $detached] as $definition) {
+            if (($definition['revision'] ?? null) === $revision) { return $definition; }
+        }
+        return $history[$revision] ?? [];
+    }
+
     public function kind($code)
     {
         return array_search($this->questions[$code]['question_theme_name'] ?? '', self::THEMES, true);
@@ -177,8 +195,7 @@ final class LimeControlJsonContext
             $fieldName = $this->fieldName($source);
             $answer = json_decode((string)($values[$fieldName] ?? ''), true);
             $answer = is_array($answer) ? $answer : ['version' => 1, 'rows' => []];
-            $revision = isset($answer['revision']) && is_string($answer['revision']) ? $answer['revision'] : null;
-            $upstream = $this->definition($source, $revision);
+            $upstream = $this->responseDefinition($source, $answer);
             $definitions[$source] = $upstream;
             $descriptors[$source] = [['fieldName' => $fieldName, 'path' => [], 'kind' => 'block']];
             $sources[$source] = $answer;
@@ -216,7 +233,9 @@ final class LimeControlJsonContext
 
     public function currentValues()
     {
-        return $_SESSION['survey_' . (int)$this->survey->sid] ?? [];
+        $sid = (int)$this->survey->sid;
+        // LS7 separates interview navigation from answer data; LS6 stores both in survey_<sid>.
+        return $_SESSION['responses_' . $sid] ?? $_SESSION['survey_' . $sid] ?? [];
     }
 
     public static function equation($code)

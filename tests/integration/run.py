@@ -27,7 +27,7 @@ def checksum(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def deploy_archives(dist, tree):
+def verify_archives(dist):
     sums = {name.lstrip("*"): digest for digest, name in (line.split() for line in (dist / "SHA256SUMS").read_text().splitlines() if line.strip())}
     packages = {}
     for name in EXTENSIONS:
@@ -35,12 +35,10 @@ def deploy_archives(dist, tree):
         digest = checksum(artifact)
         if sums.get(artifact.name) != digest:
             raise ValueError(f"Invalid release checksum for {artifact.name}")
-        target = tree / ("upload/plugins" if name == EXTENSIONS[0] else "upload/themes/question")
         with zipfile.ZipFile(artifact) as package:
             for member in package.namelist():
                 if not member.startswith(name + "/") or ".." in Path(member).parts:
                     raise ValueError(f"Invalid release member {member}")
-            package.extractall(target)
         packages[artifact.name] = digest
     return packages
 
@@ -120,8 +118,25 @@ def qualify(base,tree,env,cmd,work,report):
     if delta != 1:
         raise AssertionError(f"40x40 block added {delta} SQL columns")
     report["added_columns_40x40"] = delta
-    proc = subprocess.run(["node",str(HERE/"browser.cjs"),base,str(sample),str(report["stress"]["sid"]),str(work)],cwd=ROOT,env=env,check=True)
+    subprocess.run(["node",str(HERE/"browser.cjs"),base,str(sample),str(report["stress"]["sid"]),str(work)],cwd=ROOT,env=env,check=True)
     report["browser"] = json.loads((work/"browser-report.json").read_text())
+    with (work/"sample-export.csv").open(encoding="utf-8-sig",newline="") as fp:
+        actual=list(csv.DictReader(fp))
+    with (ROOT/"examples/fieldwork-expected.csv").open(encoding="utf-8",newline="") as fp:
+        expected=list(csv.DictReader(fp))
+    def comparable(rows):
+        return sorted(tuple((key,value) for key,value in row.items() if key != "response_id") for row in rows)
+    if comparable(actual) != comparable(expected):
+        raise AssertionError(f"Unexpected sample CSV: {actual}")
+    with (work/"stress-export.csv").open(encoding="utf-8-sig",newline="") as fp:
+        cells = list(csv.DictReader(fp))
+    if len(cells) != 1600:
+        raise AssertionError(f"Expected 1600 exported cells, got {len(cells)}")
+    actual_values = {(tuple(json.loads(row["path"])),row["column"]):row["value"] for row in cells}
+    expected_values = {((f"R{r+1:02d}",),f"C{c+1:02d}"):str(r*40+c) for r in range(40) for c in range(40)}
+    if actual_values != expected_values:
+        raise AssertionError("40x40 CSV differs from source values")
+    report["verified_csv_cells"] = 1600
     rpc(base,"release_session_key",[key])
 
 
@@ -140,9 +155,12 @@ def main():
         with tempfile.TemporaryDirectory(prefix="lcjq-ce-") as folder:
             work = Path(folder)
             tree,env,cmd = prepare(options.version,options.engine,options.db_port,work,options.archive,options.php)
-            report["sha256"] = deploy_archives(options.dist,tree)
-            report["installation"] = probe(tree,env,cmd,"install")
+            report["sha256"] = verify_archives(options.dist)
             with http(tree,env,options.php) as base:
+                for action in ("install","update"):
+                    subprocess.run(["node",str(HERE/"admin.cjs"),base,str(options.dist.resolve()),action],env=env,check=True)
+                    report["native_zip_"+action] = True
+                report["installation"] = probe(tree,env,cmd,"installed")
                 qualify(base,tree,env,cmd,work,report)
     finally:
         print(json.dumps(report,ensure_ascii=False,indent=2))
